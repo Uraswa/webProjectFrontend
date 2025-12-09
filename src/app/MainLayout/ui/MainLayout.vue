@@ -13,7 +13,7 @@
         </div>
       </div>
     </div>
-</q-layout>
+  </q-layout>
 </template>
 
 <script>
@@ -22,8 +22,8 @@ import {defineComponent, ref} from 'vue'
 import EssentialLink from 'src/shared/ui/EssentialLink.vue'
 
 
-import ProductCard from '../../../features/ProductCard/ui/ProductCard.vue'
-import DemoProductsGrid from '../../../features/DemoProductsGrid/ui/DemoProductsGrid.vue'
+import ProductCard from 'src/widgets/ProductCard/ui/ProductCard.vue'
+import DemoProductsGrid from 'src/widgets/DemoProductsGrid/ui/DemoProductsGrid.vue'
 
 import Header from '../../../widgets/Header/ui/Header.vue'
 import Footer from '../../../widgets/Footer/ui/Footer.vue'

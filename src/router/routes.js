@@ -3,129 +3,194 @@ const routes = [
     path: '/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
+      { 
+        path: '', 
+        name: 'home', 
+        component: () => import('pages/IndexPage.vue') 
+      }
     ]
   },
   {
     path: '/product/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/ProductPage.vue') }
+      { 
+        path: '', 
+        name: 'product', 
+        component: () => import('pages/DEMO/ProductPage.vue') 
+      }
     ]
   },
   {
     path: '/search/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/ProductFilterPage.vue') }
+      { 
+        path: '', 
+        name: 'search', 
+        component: () => import('pages/DEMO/ProductFilterPage.vue') 
+      }
     ]
   },
   {
     path: '/cart/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/CartPage.vue') }
+      { 
+        path: '', 
+        name: 'cart', 
+        component: () => import('pages/DEMO/CartPage.vue') 
+      }
     ]
-
   },
   {
     path: '/checkout/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/CheckoutPage.vue') }
+      { 
+        path: '', 
+        name: 'checkout', 
+        component: () => import('pages/DEMO/CheckoutPage.vue') 
+      }
     ]
   },
   {
     path: '/orderMade/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/OrderDonePage.vue') }
+      { 
+        path: '', 
+        name: 'order-made', 
+        component: () => import('pages/DEMO/OrderDonePage.vue') 
+      }
     ]
   },
   {
     path: '/orders/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/OrdersPage.vue') }
+      { 
+        path: '', 
+        name: 'orders', 
+        component: () => import('pages/DEMO/OrdersPage.vue') 
+      }
     ]
   },
   {
     path: '/order/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/OrderPage.vue') }
+      { 
+        path: '', 
+        name: 'order', 
+        component: () => import('pages/DEMO/OrderPage.vue') 
+      }
     ]
   },
   {
     path: '/login',
-    name: 'login',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Auth/LoginPage.vue') }
+      { 
+        path: '', 
+        name: 'login', 
+        component: () => import('pages/Auth/LoginPage.vue') 
+      }
     ]
   },
   {
     path: '/registration',
-    name: 'registration',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Auth/RegistrationPage.vue') }
+      { 
+        path: '', 
+        name: 'registration', 
+        component: () => import('pages/Auth/RegistrationPage.vue') 
+      }
     ]
   },
   {
     path: '/forgotPassword',
-    name: 'forgotPassword',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Auth/ForgotPasswordPage.vue') }
+      { 
+        path: '', 
+        name: 'forgot-password', 
+        component: () => import('pages/Auth/ForgotPasswordPage.vue') 
+      }
     ]
   },
   {
-    path: '/changePassword/:link',
-    name: 'changePassword',
+    path: '/changePassword/:link', 
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Auth/ChangePasswordPage.vue') }
+      { 
+        path: '', 
+        name: 'change-password', 
+        component: () => import('pages/Auth/ChangePasswordPage.vue'),
+        props: true 
+      }
     ]
   },
   {
     path: '/activation/:link',
-    name: 'activation',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Auth/AccountActivationPage.vue') }
+      { 
+        path: '', 
+        name: 'activation', 
+        component: () => import('pages/Auth/AccountActivationPage.vue'),
+        props: true
+      }
     ]
   },
   {
     path: '/mail-sent',
-    name: 'mailSent',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Auth/MailSentPage.vue') }
+      { 
+        path: '', 
+        name: 'mail-sent', 
+        component: () => import('pages/Auth/MailSentPage.vue') 
+      }
     ]
   },
-
   {
     path: '/seller/products',
-    name: 'lk_seller_products',
-    component: () => import('src/features/LkSellerLayout/ui/LkSellerLayout.vue'),
+    component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/LkSeller/ProductsList.vue') }
+      { 
+        path: '', 
+        name: 'seller-products', 
+        component: () => import('pages/DEMO/LkSeller/ProductsList.vue') 
+      }
     ]
   },
   {
     path: '/seller/orders',
-    name: 'lk_seller_orders',
-    component: () => import('src/features/LkSellerLayout/ui/LkSellerLayout.vue'),
+    component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/DEMO/LkSeller/OrdersList.vue') }
+      { 
+        path: '', 
+        name: 'seller-orders', 
+        component: () => import('pages/DEMO/LkSeller/OrdersList.vue') 
+      }
     ]
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    path: '/catalog',
+    component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
+    children: [
+      { 
+        path: '', 
+        name: 'catalog', 
+        component: () => import('pages/CatalogPage.vue') 
+      }
+    ]
+  },
   {
     path: '/:catchAll(.*)*',
+    name: 'not-found',
     component: () => import('pages/ErrorNotFound.vue')
   }
 ]

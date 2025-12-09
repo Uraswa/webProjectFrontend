@@ -4,7 +4,11 @@
       <RouterLink to="/"><p style="margin: 0; font-size: 2em">Sellzy</p></RouterLink>
     </div>
     <div class="col-2" style="display: flex; justify-content: space-around">
-      <q-btn icon="menu">Каталог</q-btn>
+      <q-btn 
+        icon="menu" 
+        label="Каталог" 
+        :to="{ name: 'catalog' }" 
+      />
     </div>
     <div class="col-6">
       <q-input label="Розыск">

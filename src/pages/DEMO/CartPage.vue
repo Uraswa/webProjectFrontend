@@ -187,7 +187,7 @@
 </template>
 
 <script>
-import DemoProductsGrid from '../../features/DemoProductsGrid/ui/DemoProductsGrid.vue';
+import DemoProductsGrid from 'src/widgets/DemoProductsGrid/ui/DemoProductsGrid.vue';
 
 export default {
   name: "CartPage",

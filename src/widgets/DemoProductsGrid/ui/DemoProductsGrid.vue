@@ -1,5 +1,5 @@
 <script>
-import ProductCard from "src/features/ProductCard/ui/ProductCard.vue";
+import ProductCard from "src/widgets/ProductCard/ui/ProductCard.vue";
 
 export default {
   name: "DemoProductsGrid",
