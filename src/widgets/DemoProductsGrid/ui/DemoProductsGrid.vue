@@ -2,23 +2,12 @@
 import ProductCard from "src/widgets/ProductCard/ui/ProductCard.vue";
 
 export default {
-  name: "DemoProductsGrid",
+  name: "ProductsGrid",
   components: { ProductCard },
-
-  data() {
-    return {
-      demoProducts: [
-        {
-          id: 1,
-          title: 'Товар с алиэкспресс',
-          price: 300,
-          prevPrice: 350,
-          discount: 10,
-          imageUrl: 'https://cdn.quasar.dev/img/mountains.jpg',
-          reviewsCount: 228
-        },
-        // добавь остальные если надо
-      ]
+  props: {
+    products: {
+      type: Array,
+      required: true
     }
   }
 }
@@ -28,9 +17,9 @@ export default {
   <div class="row">
     <div 
       class="col-lg-3 col-md-4 col-sm-6 col-12"
-      :style="prodIndex % 4 === 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
-      v-for="(prod, prodIndex) in demoProducts"
+      v-for="(prod, prodIndex) in products"
       :key="prod.id"
+      :style="prodIndex % 4 === 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
     >
       <ProductCard :product="prod"/>
     </div>
