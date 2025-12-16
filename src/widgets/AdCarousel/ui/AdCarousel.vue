@@ -9,7 +9,6 @@
       :autoplay="carouselData.settings?.autoplay ?? false"
       :style="{ height: carouselData.settings?.height || '250px' }"
       class="carousel gray-carousel"
-      @transition="handleSlideChange"
     >
       <q-carousel-slide
         v-for="slide in sortedSlides"
@@ -22,7 +21,7 @@
     </q-carousel>
   </div>
 
-  <!-- Скелетон для загрузки -->
+  <!-- Skeleton -->
   <div v-else class="ad-carousel-skeleton">
     <q-skeleton height="100%" />
   </div>
@@ -30,7 +29,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { CarouselData, CarouselSlide } from '../types';
+import { CarouselData } from '../types';
 import { carouselApi } from '../api/adCarousel.api';
 import SlideRenderer from './SlideRenderer.vue';
 
@@ -39,28 +38,28 @@ const currentSlide = ref<number>(1);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
-// Сортируем слайды по order
+// Сортировка по order
 const sortedSlides = computed(() => {
   if (!carouselData.value) return [];
-  return [...carouselData.value.slides].sort((a, b) => (a.order || 0) - (b.order || 0));
+  return [...carouselData.value.slides].sort(
+    (a, b) => (a.order || 0) - (b.order || 0)
+  );
 });
 
-// Таймер для автоплея
-let autoplayTimer: NodeJS.Timeout | null = null;
+// Автоплей (кастомный)
+let autoplayTimer: number | null = null;
 
 const fetchCarouselData = async () => {
   isLoading.value = true;
   error.value = null;
-  
+
   try {
     carouselData.value = await carouselApi.fetchCarouselData();
-    
-    // Устанавливаем первый слайд
+
     if (carouselData.value.slides.length > 0) {
       currentSlide.value = sortedSlides.value[0].id;
     }
-    
-    // Настраиваем автоплей если нужно
+
     setupAutoplay();
   } catch (err) {
     error.value = 'Не удалось загрузить карусель';
@@ -72,28 +71,23 @@ const fetchCarouselData = async () => {
 
 const setupAutoplay = () => {
   if (!carouselData.value?.settings?.autoplay) return;
-  
+
   const interval = carouselData.value.settings.autoplayInterval || 5000;
-  
-  autoplayTimer = setInterval(() => {
+
+  autoplayTimer = window.setInterval(() => {
     if (!carouselData.value) return;
-    
-    const currentIndex = sortedSlides.value.findIndex(s => s.id === currentSlide.value);
-    const nextIndex = (currentIndex + 1) % sortedSlides.value.length;
+
+    const currentIndex = sortedSlides.value.findIndex(
+      s => s.id === currentSlide.value
+    );
+    const nextIndex =
+      (currentIndex + 1) % sortedSlides.value.length;
+
     currentSlide.value = sortedSlides.value[nextIndex].id;
   }, interval);
 };
 
-const handleSlideChange = (newSlide: number) => {
-  // Отправляем статистику просмотра слайда
-  if (carouselData.value) {
-    carouselApi.trackSlideView(newSlide).catch(console.error);
-  }
-};
-
-onMounted(() => {
-  fetchCarouselData();
-});
+onMounted(fetchCarouselData);
 
 onUnmounted(() => {
   if (autoplayTimer) {
@@ -101,6 +95,7 @@ onUnmounted(() => {
   }
 });
 </script>
+
 
 <style scoped>
 .ad-carousel {
