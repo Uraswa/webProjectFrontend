@@ -4,7 +4,7 @@
     <AdCarousel />
 
     <div class="col-12" style="margin-top: 25px">
-      <DemoProductsGrid/>
+      <PopularProductsGrid/>
     </div>
 
   </q-page>
@@ -13,12 +13,12 @@
 <script>
 import { defineComponent } from 'vue';
 
-import DemoProductsGrid from 'src/widgets/DemoProductsGrid/ui/DemoProductsGrid.vue';
+import PopularProductsGrid from 'src/features/popularProducts/ui/PopularProductsGrid.vue';
 import AdCarousel from 'src/widgets/AdCarousel/ui/AdCarousel.vue'
 
 export default defineComponent({
   name: 'IndexPage' ,
-  components: {DemoProductsGrid, AdCarousel},
+  components: {PopularProductsGrid, AdCarousel},
   data() {
     return {
       slide: 1
