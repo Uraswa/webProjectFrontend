@@ -10,11 +10,10 @@ export default {
       demoProducts: [
         {
           id: 1,
-          title: 'Товар с алиэкспресс',
+          name: 'Товар с алиэкспресс',
           price: 300,
-          prevPrice: 350,
-          discount: 10,
-          imageUrl: 'https://cdn.quasar.dev/img/mountains.jpg',
+          order_count: 10,
+          photos: '["https://cdn.quasar.dev/img/mountains.jpg"]',
           reviewsCount: 228
         },
         // добавь остальные если надо
