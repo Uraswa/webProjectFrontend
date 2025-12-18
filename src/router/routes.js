@@ -181,10 +181,53 @@ const routes = [
     path: '/catalog',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'catalog', 
-        component: () => import('pages/CatalogPage.vue') 
+      {
+        path: '',
+        name: 'catalog',
+        component: () => import('pages/CatalogPage.vue')
+      }
+    ]
+  },
+  // PVZ Owner routes
+  {
+    path: '/pvz-owner/select',
+    component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'opp-selection',
+        component: () => import('pages/LkOpp/OppSelectionPage.vue')
+      }
+    ]
+  },
+  {
+    path: '/pvz-owner',
+    component: () => import('src/widgets/LkOppLayout/ui/LkOppLayout.vue'),
+    children: [
+      {
+        path: 'dashboard',
+        name: 'opp-dashboard',
+        component: () => import('pages/LkOpp/DashboardPage.vue')
+      },
+      {
+        path: 'orders',
+        name: 'opp-orders',
+        component: () => import('pages/LkOpp/OrdersPage.vue')
+      },
+      {
+        path: 'logistics',
+        name: 'opp-logistics',
+        component: () => import('pages/LkOpp/LogisticsPage.vue')
+      },
+      {
+        path: 'receive-goods',
+        name: 'opp-receive-goods',
+        component: () => import('pages/LkOpp/ReceiveGoodsPage.vue')
+      },
+      {
+        path: 'operations',
+        name: 'opp-operations',
+        component: () => import('pages/LkOpp/OperationsPage.vue')
       }
     ]
   },
