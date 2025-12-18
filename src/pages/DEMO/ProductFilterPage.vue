@@ -77,7 +77,7 @@
                 Поиск: {{ searchQuery }}
               </q-chip>
               <q-chip
-                v-if="minPrice > 0 || maxPrice < 10000"
+                v-if="minPrice > 0 || maxPrice"
                 removable
                 dense
                 @remove="resetPrice"
@@ -178,7 +178,7 @@ export default {
       
       // 💰 Цена
       minPrice: 0,
-      maxPrice: 10000,
+      maxPrice: null, 
       
       // 📊 Сортировка (новый формат)
       sortModel: 'created_at:desc',
@@ -217,12 +217,12 @@ export default {
     },
     
     hasActiveFilters() {
-      return this.searchQuery || this.minPrice > 0 || this.maxPrice < 10000
+      return this.searchQuery || this.minPrice > 0 || this.maxPrice !== null 
     },
     
     priceRangeText() {
       const min = this.minPrice || 0
-      const max = this.maxPrice === 10000 ? '∞' : this.maxPrice
+      const max = this.maxPrice === null ? '∞' : this.maxPrice 
       return `${min} - ${max}₽`
     },
     
@@ -264,7 +264,7 @@ export default {
       
       this.searchQuery = query.search || ''
       this.minPrice = Number(query.min_price) || 0
-      this.maxPrice = Number(query.max_price) || 10000
+      this.maxPrice = query.max_price ? Number(query.max_price) : null 
       this.currentPage = Number(query.page) || 1
       
       // Восстанавливаем сортировку из URL
@@ -281,7 +281,7 @@ export default {
       
       if (this.searchQuery) query.search = this.searchQuery
       if (this.minPrice > 0) query.min_price = this.minPrice
-      if (this.maxPrice < 10000) query.max_price = this.maxPrice
+      if (this.maxPrice !== null) query.max_price = this.maxPrice 
       if (this.sortModel !== 'created_at:desc') {
         query.order_by = this.sortBy
         query.order_direction = this.sortDirection
@@ -321,15 +321,15 @@ export default {
       if (type === 'min') {
         this.minPrice = Number(value) || 0
       } else {
-        this.maxPrice = Number(value) || 10000
+        this.maxPrice = value !== '' ? Number(value) : null 
       }
-        this.applyFilters()
+      this.applyFilters()
     },
 
     // 🗑️ Сброс цены
     resetPrice() {
       this.minPrice = 0
-      this.maxPrice = 10000
+      this.maxPrice = null 
       this.applyFilters()
     },
 
@@ -355,7 +355,7 @@ export default {
     resetAllFilters() {
       this.searchQuery = ''
       this.minPrice = 0
-      this.maxPrice = 10000
+      this.maxPrice = null 
       this.sortModel = 'created_at:desc'
       this.currentPage = 1
       
@@ -366,8 +366,8 @@ export default {
     getApiParams() {
       return {
         search: this.searchQuery || undefined,
-        min_price: this.minPrice || undefined,
-        max_price: this.maxPrice || undefined,
+        min_price: this.minPrice > 0 ? this.minPrice : undefined,
+        max_price: this.maxPrice !== null ? this.maxPrice : undefined, 
         order_by: this.sortBy,
         order_direction: this.sortDirection,
         page: this.currentPage,
