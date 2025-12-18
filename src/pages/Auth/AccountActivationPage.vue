@@ -1,5 +1,5 @@
 ﻿<script>
-import Api from "src/helpers/Api.js";
+import Api from "src/shared/api/Api.js";
 
 export default {
   name: "AccountActivationPage",

@@ -1,6 +1,6 @@
 ﻿<script>
-import Api from "src/helpers/Api.js";
-import CenteredFormPage from "layouts/CenteredFormPage.vue";
+import Api from "src/shared/api/Api.js";
+import CenteredFormPage from "src/shared/ui/CenteredFormPage.vue";
 
 export default {
   name: "ChangePasswordPage",
