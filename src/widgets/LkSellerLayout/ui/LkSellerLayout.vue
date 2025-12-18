@@ -1,4 +1,4 @@
-﻿<script>
+<script>
 export default {
   name: "LkSellerLayout",
   data(){
@@ -62,4 +62,3 @@ export default {
 <style scoped>
 
 </style>
-

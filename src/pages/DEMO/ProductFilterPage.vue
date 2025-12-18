@@ -183,20 +183,7 @@
 
       <!-- Правая колонка - товары -->
       <div class="col-md-9 col-12">
-        <div class="row">
-          <div class="col-xl-3 col-lg-4 col-md-6 col-12"
-               :style="prod % 4 == 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
-               v-for="prod in [0,1,2,3,4,5,6,7]">
-            <Product/>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-xl-3 col-lg-4 col-md-6 col-12"
-               :style="prod % 4 == 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
-               v-for="prod in [0,1,2,3,4,5,6,7]">
-            <Product/>
-          </div>
-        </div>
+        <DemoProductsGrid/>
 
         <div class="text-center q-mt-lg">
           <q-btn
@@ -212,12 +199,11 @@
 </template>
 
 <script>
-import DemoProductsGrid from "components/DEMO/DemoProductsGrid.vue";
-import Product from "components/DEMO/Product.vue";
+import DemoProductsGrid from 'src/widgets/DemoProductsGrid/ui/DemoProductsGrid.vue';
 
 export default {
   name: "ProductFilterPage",
-  components: {Product, DemoProductsGrid},
+  components: {DemoProductsGrid},
   data() {
     return {
       sortBy: 'popular',

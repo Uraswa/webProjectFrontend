@@ -1,5 +1,5 @@
 ﻿<script>
-import DemoProductsGrid from "components/DEMO/DemoProductsGrid.vue";
+import DemoProductsGrid from 'src/widgets/DemoProductsGrid/ui/DemoProductsGrid.vue';
 
 export default {
   name: "ProductPage",
