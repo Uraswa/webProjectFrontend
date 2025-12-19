@@ -11,7 +11,7 @@ const routes = [
     ]
   },
   {
-    path: '/product/',
+    path: '/product/:id',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
       { 
