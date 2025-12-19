@@ -2,9 +2,13 @@
 import { oppOrdersApi } from 'src/features/oppOrders/api/oppOrdersApi'
 import { useOppId } from 'src/features/oppSelection/lib/useOppId'
 import { getStatusColor, getStatusText } from 'src/entities/OppOrder/lib/statusHelpers'
+import OrderDetailsDialog from 'src/features/oppOrders/ui/OrderDetailsDialog.vue'
 
 export default {
   name: 'OrdersPage',
+  components: {
+    OrderDetailsDialog
+  },
   data() {
     return {
       oppId: null,
@@ -300,27 +304,12 @@ export default {
       </q-card>
     </div>
 
-    <!-- Placeholder для диалога деталей (будет создан позже) -->
-    <q-dialog v-model="showDetailsDialog">
-      <q-card style="min-width: 600px">
-        <q-card-section>
-          <div class="text-h6">Детали заказа #{{ selectedOrder?.order_id }}</div>
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-section>
-          <p>Диалог деталей будет реализован в следующем шаге</p>
-          <p class="text-grey-7">
-            Здесь будет подробная информация о заказе, товарах и история статусов
-          </p>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn label="Закрыть" color="primary" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <!-- Диалог деталей заказа -->
+    <OrderDetailsDialog
+      v-model="showDetailsDialog"
+      :order-id="selectedOrder?.order_id"
+      :opp-id="oppId"
+    />
   </q-page>
 </template>
 

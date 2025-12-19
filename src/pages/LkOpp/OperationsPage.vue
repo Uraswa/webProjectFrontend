@@ -1,39 +1,53 @@
 <script>
 import { useOppId } from 'src/features/oppSelection/lib/useOppId'
+import ReceiveFromSellerForm from 'src/features/oppOperations/ui/ReceiveFromSellerForm.vue'
+import GiveToLogisticsForm from 'src/features/oppOperations/ui/GiveToLogisticsForm.vue'
+import ReceiveFromLogisticsForm from 'src/features/oppOperations/ui/ReceiveFromLogisticsForm.vue'
+import DeliverToBuyerForm from 'src/features/oppOperations/ui/DeliverToBuyerForm.vue'
 
 export default {
   name: 'OperationsPage',
+  components: {
+    ReceiveFromSellerForm,
+    GiveToLogisticsForm,
+    ReceiveFromLogisticsForm,
+    DeliverToBuyerForm
+  },
   data() {
     return {
       oppId: null,
+      showReceiveFromSeller: false,
+      showGiveToLogistics: false,
+      showReceiveFromLogistics: false,
+      showDeliverToBuyer: false,
       operations: [
         {
           title: 'Приём от продавца',
           description: 'Зарегистрировать получение товара от продавца',
           icon: 'inventory',
           color: 'blue',
-          route: null
+          key: 'receiveFromSeller'
         },
         {
           title: 'Передача логистике',
           description: 'Передать товар в логистическую службу',
           icon: 'local_shipping',
           color: 'orange',
-          route: null
+          key: 'giveToLogistics'
         },
         {
           title: 'Приём от логистики',
           description: 'Подтвердить получение товара от логистики',
           icon: 'inbox',
           color: 'teal',
-          route: null
+          key: 'receiveFromLogistics'
         },
         {
           title: 'Выдача покупателю',
           description: 'Выдать заказ покупателю',
           icon: 'person_check',
           color: 'green',
-          route: null
+          key: 'deliverToBuyer'
         }
       ]
     }
@@ -48,10 +62,21 @@ export default {
   },
   methods: {
     openOperation(operation) {
-      this.$q.notify({
-        type: 'info',
-        message: `Форма "${operation.title}" будет реализована в следующем шаге`
-      })
+      const formMap = {
+        'receiveFromSeller': 'showReceiveFromSeller',
+        'giveToLogistics': 'showGiveToLogistics',
+        'receiveFromLogistics': 'showReceiveFromLogistics',
+        'deliverToBuyer': 'showDeliverToBuyer'
+      }
+
+      const formKey = formMap[operation.key]
+      if (formKey) {
+        this[formKey] = true
+      }
+    },
+    handleOperationSuccess() {
+      // Обработчик успешного выполнения операции
+      // Можно добавить дополнительную логику, например, обновление списков
     }
   }
 }
@@ -114,15 +139,34 @@ export default {
             <li><strong>Приём от логистики:</strong> подтверждение получения товара от курьерской службы</li>
             <li><strong>Выдача покупателю:</strong> выдача заказа конечному покупателю</li>
           </ul>
-          <q-banner class="bg-info text-white q-mt-md" rounded>
-            <template v-slot:avatar>
-              <q-icon name="info" />
-            </template>
-            Формы для выполнения операций будут реализованы в следующей версии
-          </q-banner>
         </q-card-section>
       </q-card>
     </div>
+
+    <!-- Формы операций -->
+    <ReceiveFromSellerForm
+      v-model="showReceiveFromSeller"
+      :opp-id="oppId"
+      @success="handleOperationSuccess"
+    />
+
+    <GiveToLogisticsForm
+      v-model="showGiveToLogistics"
+      :opp-id="oppId"
+      @success="handleOperationSuccess"
+    />
+
+    <ReceiveFromLogisticsForm
+      v-model="showReceiveFromLogistics"
+      :opp-id="oppId"
+      @success="handleOperationSuccess"
+    />
+
+    <DeliverToBuyerForm
+      v-model="showDeliverToBuyer"
+      :opp-id="oppId"
+      @success="handleOperationSuccess"
+    />
   </q-page>
 </template>
 
