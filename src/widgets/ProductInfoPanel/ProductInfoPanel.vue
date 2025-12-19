@@ -30,7 +30,8 @@
                 class="q-mr-sm"
               />
               <span class="text-caption text-grey-7">
-                {{ rating.total_reviews }} отзывов
+                <!-- ИСПРАВЛЕНО: используем функцию для правильного окончания -->
+                {{ getReviewCountText(parseInt(rating.total_reviews) || 0) }}
               </span>
             </div>
           </q-item-section>
@@ -80,6 +81,40 @@ export default defineComponent({
       required: true
     }
   },
-  emits: ['add-to-cart', 'buy-now']
+  emits: ['add-to-cart', 'buy-now'],
+  
+  methods: {
+    /**
+     * Правильное склонение слова "отзыв" в зависимости от количества
+     * @param count - количество отзывов
+     * @returns строка с правильным окончанием
+     */
+    getReviewCountText(count: number): string {
+      // Если не число или отрицательное
+      if (typeof count !== 'number' || isNaN(count) || count < 0) {
+        return '0 отзывов'
+      }
+      
+      const lastDigit = count % 10
+      const lastTwoDigits = count % 100
+      
+      // Исключения: 11-19
+      if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+        return `${count} отзывов`
+      }
+      
+      // Правила для 1, 2-4, 5-0
+      switch (lastDigit) {
+        case 1:
+          return `${count} отзыв`
+        case 2:
+        case 3:
+        case 4:
+          return `${count} отзыва`
+        default:
+          return `${count} отзывов`
+      }
+    }
+  }
 })
 </script>
