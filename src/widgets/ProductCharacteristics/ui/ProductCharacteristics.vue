@@ -1,4 +1,4 @@
-<!-- widgets/ProductCharacteristics/ProductCharacteristics.vue -->
+<!-- widgets/ProductCharacteristics/ui/ProductCharacteristics.vue -->
 <template>
   <div>
     <h5 class="text-h5 text-weight-bold q-mb-md">Характеристики</h5>

@@ -1,4 +1,4 @@
-<!-- widgets/ProductInfoPanel/ProductInfoPanel.vue -->
+<!-- widgets/ProductInfoPanel/ui/ProductInfoPanel.vue -->
 <template>
   <div class="column justify-between" style="height: 100%">
     <div>
@@ -30,7 +30,6 @@
                 class="q-mr-sm"
               />
               <span class="text-caption text-grey-7">
-                <!-- ИСПРАВЛЕНО: используем функцию для правильного окончания -->
                 {{ getReviewCountText(parseInt(rating.total_reviews) || 0) }}
               </span>
             </div>
@@ -84,13 +83,7 @@ export default defineComponent({
   emits: ['add-to-cart', 'buy-now'],
   
   methods: {
-    /**
-     * Правильное склонение слова "отзыв" в зависимости от количества
-     * @param count - количество отзывов
-     * @returns строка с правильным окончанием
-     */
     getReviewCountText(count: number): string {
-      // Если не число или отрицательное
       if (typeof count !== 'number' || isNaN(count) || count < 0) {
         return '0 отзывов'
       }
@@ -98,12 +91,10 @@ export default defineComponent({
       const lastDigit = count % 10
       const lastTwoDigits = count % 100
       
-      // Исключения: 11-19
       if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
         return `${count} отзывов`
       }
       
-      // Правила для 1, 2-4, 5-0
       switch (lastDigit) {
         case 1:
           return `${count} отзыв`
@@ -116,5 +107,5 @@ export default defineComponent({
       }
     }
   }
-})
+}) 
 </script>

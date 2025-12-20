@@ -3,14 +3,15 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { productDetailsApi } from '../api/productDetailsApi'
 import type { Product } from 'src/entities/Product/models/Product'
+import type { ProductReview, ProductRating } from '../api/productDetailsApi'
 
 export function useProductDetails() {
   const route = useRoute()
   const productId = computed(() => Number(route.params.id))
   
   const product = ref<Product | null>(null)
-  const feedback = ref<any[]>([])
-  const rating = ref({ total_reviews: '0', average_rating: '0' })
+  const feedback = ref<ProductReview[]>([])
+  const rating = ref<ProductRating>({ total_reviews: '0', average_rating: '0' })
   const loading = ref(true)
   const error = ref<string | null>(null)
   

@@ -1,4 +1,4 @@
-<!-- widgets/ProductGallery/ProductGallery.vue -->
+<!-- widgets/ProductGallery/ui/ProductGallery.vue -->
 <template>
   <div>
     <div v-if="images.length > 0">
