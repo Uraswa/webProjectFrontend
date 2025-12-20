@@ -1,4 +1,3 @@
-<!-- features/productSearch/ui/SearchFiltersPanel.vue -->
 <template>
   <q-card flat bordered class="q-pa-md" style="position: sticky; top: 20px">
     <div class="text-h6 text-weight-bold q-mb-md">Фильтры</div>
@@ -169,9 +168,16 @@ export default defineComponent({
     }
     
     const handleFilterChange = (data: any) => {
-      if (data.value !== undefined) {
+      console.log('🔄 [SearchFiltersPanel] Filter change data:', data)
+      
+      if (data.values !== undefined) {
+        // Массив значений для multiple select
+        searchFilters.addCharacteristicFilter(data.filterId, data.values)
+      } else if (data.value !== undefined) {
+        // Одиночное значение
         searchFilters.addCharacteristicFilter(data.filterId, data.value)
       } else {
+        // Диапазон
         searchFilters.addCharacteristicFilter(data.filterId, undefined, data.min, data.max)
       }
       emit('filter-change', { type: 'characteristic', value: data })
@@ -208,9 +214,11 @@ export default defineComponent({
           const max = filter.value.max || '∞'
           return `Цена: ${min} - ${max}₽`
         case 'category':
-          return `Категория`
+          return `Категория: ${filter.value}`
         case 'characteristic':
-          return `Характеристика`
+          return `${filter.label}: ${filter.value.displayValue || filter.value.value || ''}`
+        case 'search':
+          return `Поиск: "${filter.value}"`
         default:
           return filter.label
       }

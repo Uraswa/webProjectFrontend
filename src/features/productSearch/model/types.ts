@@ -14,12 +14,12 @@ export interface ProductSearchParams {
   limit?: number
   char_filters?: Array<{
     filter: string  // ID характеристики как строка
-    value?: string  // Для options/color/bool
+    value?: string  // Для options/color/bool (одиночное значение)
+    values?: string[] // Для multiple options (массив значений)
     min?: string    // Для int/float
     max?: string    // Для int/float
   }>
 }
-
 /** Пагинация */
 export interface Pagination {
   page: number

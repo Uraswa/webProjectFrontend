@@ -1,4 +1,3 @@
-<!-- features/productSearch/ui/FilterRenderer.vue -->
 <template>
   <div>
     <!-- Тип: options (чекбоксы) -->
@@ -167,9 +166,13 @@ export default defineComponent({
     
     const emitChange = () => {
       console.log('📤 [FilterRenderer] emitChange:', {
+        filterId: props.filter.id.toString(),
         type: props.filter.type,
         selectedOptions: selectedOptions.value,
-        selectedColor: selectedColor.value
+        selectedColor: selectedColor.value,
+        selectedMin: selectedMin.value,
+        selectedMax: selectedMax.value,
+        selectedBool: selectedBool.value
       })
       
       if (props.filter.type === 'int' || props.filter.type === 'float') {
@@ -192,24 +195,11 @@ export default defineComponent({
           value: selectedColor.value || undefined
         })
       } else if (props.filter.type === 'options') {
-        // ВАЖНО: Для мультиселекта НЕ отправляем массив!
-        // Отправляем каждое значение ОТДЕЛЬНЫМ событием
-        // или только последнее выбранное значение
-        
-        if (selectedOptions.value.length === 0) {
-          // Если ничего не выбрано - сбрасываем фильтр
-          emit('change', {
-            filterId: props.filter.id.toString(),
-            value: undefined
-          })
-        } else {
-          // Отправляем ПОСЛЕДНЕЕ выбранное значение
-          // (или можно отправлять каждое, но бекенд не поддерживает массивы)
-          emit('change', {
-            filterId: props.filter.id.toString(),
-            value: selectedOptions.value[selectedOptions.value.length - 1]
-          })
-        }
+        // ВАЖНО: Для мультиселекта отправляем МАССИВ значений
+        emit('change', {
+          filterId: props.filter.id.toString(),
+          values: selectedOptions.value.length > 0 ? selectedOptions.value : undefined
+        })
       }
     }
     

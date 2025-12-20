@@ -1,4 +1,3 @@
-// features/productSearch/model/useSearchFilters.ts
 import { useRoute, useRouter } from 'vue-router'
 import { computed } from 'vue'
 import type { ProductSearchParams, ActiveFilter } from './types'
@@ -13,7 +12,9 @@ export function useSearchFilters() {
     
     try {
       if (typeof query.char_filters === 'string') {
-        return JSON.parse(query.char_filters)
+        const parsed = JSON.parse(query.char_filters)
+        console.log('🔍 [useSearchFilters] Parsed char_filters from URL:', parsed)
+        return parsed
       }
       return query.char_filters
     } catch (e) {
@@ -63,12 +64,29 @@ export function useSearchFilters() {
     }
     
     // Фильтры характеристик
-    filters.value.char_filters.forEach((filter, index) => {
+    filters.value.char_filters.forEach((filter: any, index: number) => {
+      let label = ''
+      let valueStr = ''
+      
+      if (filter.values && Array.isArray(filter.values)) {
+        // Массив значений (multiple options)
+        label = `Характеристика ${filter.filter}`
+        valueStr = filter.values.join(', ')
+      } else if (filter.value !== undefined) {
+        // Одно значение
+        label = `Характеристика ${filter.filter}`
+        valueStr = String(filter.value)
+      } else if (filter.min !== undefined || filter.max !== undefined) {
+        // Диапазон
+        label = `Характеристика ${filter.filter}`
+        valueStr = `${filter.min || ''} - ${filter.max || ''}`
+      }
+      
       filtersList.push({
         id: `char_${filter.filter}_${index}`,
         type: 'characteristic',
-        label: `Характеристика ${filter.filter}`,
-        value: filter
+        label,
+        value: { ...filter, displayValue: valueStr }
       })
     })
     
@@ -95,6 +113,7 @@ export function useSearchFilters() {
       query.page = '1'
     }
     
+    console.log('🔄 [useSearchFilters] Updating URL with:', { key, value, query })
     router.push({ query })
   }
   
@@ -103,22 +122,48 @@ export function useSearchFilters() {
     updateFilter('category_id', categoryId)
   }
   
-  // Добавить фильтр характеристики
-  function addCharacteristicFilter(filterId: string, value?: string, min?: string, max?: string) {
+  // Добавить/обновить фильтр характеристики
+  function addCharacteristicFilter(filterId: string, value?: string | string[], min?: string, max?: string) {
     const currentFilters = [...filters.value.char_filters]
     const existingIndex = currentFilters.findIndex(f => f.filter === filterId)
     
-    // Явно указываем тип для newFilter
-    const newFilter: { filter: string; value?: string; min?: string; max?: string } = { filter: filterId }
+    // Создаем новый фильтр
+    const newFilter: any = { filter: filterId }
     
-    if (value !== undefined) newFilter.value = value
+    if (value !== undefined) {
+      if (Array.isArray(value)) {
+        // Массив значений для multiple select
+        if (value.length > 0) {
+          newFilter.values = value
+        } else {
+          // Если массив пустой - удаляем фильтр
+          if (existingIndex >= 0) {
+            currentFilters.splice(existingIndex, 1)
+          }
+          updateFilter('char_filters', currentFilters)
+          return
+        }
+      } else {
+        // Одиночное значение
+        newFilter.value = value
+      }
+    }
+    
     if (min !== undefined) newFilter.min = min
     if (max !== undefined) newFilter.max = max
     
-    if (existingIndex >= 0) {
-      currentFilters[existingIndex] = newFilter
+    // Если все поля undefined - удаляем фильтр
+    if (!newFilter.value && !newFilter.values && !newFilter.min && !newFilter.max) {
+      if (existingIndex >= 0) {
+        currentFilters.splice(existingIndex, 1)
+      }
     } else {
-      currentFilters.push(newFilter)
+      // Обновляем или добавляем
+      if (existingIndex >= 0) {
+        currentFilters[existingIndex] = newFilter
+      } else {
+        currentFilters.push(newFilter)
+      }
     }
     
     updateFilter('char_filters', currentFilters)
