@@ -1,7 +1,7 @@
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 
-let baseUrl = "http://212.33.245.152/";
+let baseUrl = "http://localhost:8000/";
 
 const $api = axios.create({
   withCredentials: true,
