@@ -6,23 +6,12 @@ import { parseProductPhotos } from 'src/shared/utils/parsePhotos'
 export const productSearchApi = {
   async searchProducts(params: ProductSearchParams): Promise<ProductSearchResponse> {
     try {
-      // Формируем query строку вручную
-      const queryParams = new URLSearchParams()
-      
-      // Обязательные параметры с дефолтами
-      queryParams.append('order_by', params.order_by || 'created_at')
-      queryParams.append('order_direction', params.order_direction || 'desc')
-      queryParams.append('page', String(params.page || 1))
-      queryParams.append('limit', String(params.limit || 20))
-      
-      // Опциональные параметры
-      if (params.search) queryParams.append('search', params.search)
-      if (params.category_id) queryParams.append('category_id', String(params.category_id))
-      if (params.shop_id) queryParams.append('shop_id', String(params.shop_id))
-      if (params.min_price) queryParams.append('min_price', String(params.min_price))
-      if (params.max_price) queryParams.append('max_price', String(params.max_price))
-      if (params.char_filters && params.char_filters.length > 0) {
-        queryParams.append('char_filters', JSON.stringify(params.char_filters))
+      // формируем query-параметры с дефолтами
+      const query: Record<string, any> = {
+        order_by: params.order_by || 'created_at',
+        order_direction: params.order_direction || 'desc',
+        page: params.page || 1,
+        limit: params.limit || 20,
       }
 
       if (params.search) query.search = params.search

@@ -1,20 +1,6 @@
-﻿<!-- pages/ProductFilterPage/ProductFilterPage.vue -->
-<template>
+﻿<template>
   <q-page class="q-pa-lg">
-    <!-- Хлебные крошки -->
-    <q-breadcrumbs class="q-mb-md">
-      <q-breadcrumbs-el label="Главная" to="/" />
-      <q-breadcrumbs-el 
-        v-if="selectedCategory" 
-        :label="selectedCategory.name" 
-      />
-      <q-breadcrumbs-el 
-        v-else 
-        label="Все товары" 
-      />
-    </q-breadcrumbs>
-
-    <!-- Заголовок и сортировка -->
+    <!-- Заголовок -->
     <div class="row items-center justify-between q-mb-lg">
       <div class="col">
         <h4 class="q-my-none text-weight-bold">
@@ -37,7 +23,6 @@
           style="min-width: 200px"
           emit-value
           map-options
-          @update:model-value="handleSortChange"
         />
       </div>
     </div>
@@ -140,31 +125,19 @@
             <q-icon name="search_off" size="4em" color="grey-4" class="q-mb-md" />
             <div class="text-h6 text-weight-medium q-mb-sm">Товары не найдены</div>
             <div class="text-grey-7 q-mb-lg">Попробуйте изменить параметры поиска</div>
-            <q-btn 
-              label="Сбросить фильтры" 
-              color="primary" 
-              outline 
-              @click="resetAllFilters" 
-            />
+            <q-btn label="Сбросить фильтры" color="primary" outline @click="resetAllFilters" />
           </div>
 
-          <!-- Сетка товаров (по 4 в ряд как в примере) -->
-          <template v-else>
-            <div 
-              v-for="(row, rowIndex) in chunkedProducts" 
-              :key="rowIndex"
-              class="row"
+          <!-- Сетка товаров -->
+          <div v-else class="row q-col-gutter-lg">
+            <div
+              v-for="product in products"
+              :key="product.product_id"
+              class="col-md-4 col-sm-6 col-12"
             >
-              <div
-                v-for="product in row"
-                :key="product.product_id"
-                class="col-xl-3 col-lg-4 col-md-6 col-12"
-                :style="rowIndex % 2 === 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
-              >
-                <ProductCard :product="product" />
-              </div>
+              <ProductCard :product="product" />
             </div>
-          </template>
+          </div>
 
           <!-- Пагинация -->
           <div v-if="pagination.total_pages > 1" class="row justify-center q-mt-xl">
@@ -177,6 +150,9 @@
               color="primary"
               @update:model-value="handlePageChange"
             />
+            <div class="text-caption text-grey-7 text-center full-width q-mt-sm">
+              Страница {{ currentPage }} из {{ pagination.total_pages }}
+            </div>
           </div>
         </div>
       </div>
@@ -184,17 +160,11 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, computed, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useSearchFilters } from 'src/features/productSearch/model/useSearchFilters'
-import { useCategories } from 'src/features/productSearch/model/useCategories'
-import { productSearchApi } from 'src/features/productSearch/api/productSearchApi'
+<script>
 import ProductCard from 'src/widgets/ProductCard/ui/ProductCard.vue'
-import SearchFiltersPanel from 'src/features/productSearch/ui/SearchFilterPanel.vue'
-import type { Product } from 'src/entities/Product/models/Product'
+import { productSearchApi } from 'src/features/productSearch/api/productSearchApi'
 
-export default defineComponent({
+export default {
   name: 'ProductSearchPage',
   
   components: {
@@ -234,12 +204,17 @@ export default defineComponent({
       currentCategory: null
     }
   },
-  
-  setup() {
-    const route = useRoute()
-    const router = useRouter()
-    const searchFilters = useSearchFilters()
-    const categories = useCategories()
+
+  computed: {
+    pageTitle() {
+      if (this.searchQuery) return `Поиск: "${this.searchQuery}"`
+      if (this.currentCategory) return this.currentCategory.name
+      return 'Все товары'
+    },
+    
+    totalProducts() {
+      return this.pagination.total
+    },
     
     hasActiveFilters() {
       return this.searchQuery || this.minPrice > 0 || this.maxPrice !== null 
@@ -251,17 +226,29 @@ export default defineComponent({
       return `${min} - ${max}₽`
     },
     
-    // Разбиваем товары по 4 в ряд для правильной верстки
-    const chunkedProducts = computed(() => {
-      const chunkSize = 4
-      const chunks = []
-      for (let i = 0; i < products.value.length; i += chunkSize) {
-        chunks.push(products.value.slice(i, i + chunkSize))
-      }
-      return chunks
-    })
+    // Разбиваем sortModel на order_by и order_direction
+    sortBy() {
+      return this.sortModel.split(':')[0]
+    },
     
-    const searchQuery = computed(() => searchFilters.filters.value.search)
+    sortDirection() {
+      return this.sortModel.split(':')[1]
+    }
+  },
+
+  created() {
+    this.loadFromUrl()
+    this.loadProducts()
+  },
+
+  watch: {
+    '$route.query': {
+      handler() {
+        this.loadFromUrl()
+        this.loadProducts()
+      },
+      deep: true
+    },
     
     // 🔥 Watch на изменение сортировки
     sortModel() {
@@ -312,15 +299,18 @@ export default defineComponent({
       this.loading = true
       
       try {
-        const params = searchFilters.getApiParams()
-        const response = await productSearchApi.searchProducts(params)
+        const params = this.getApiParams()
+        console.log('🔍 Загружаем товары с параметрами:', params)
         
-        products.value = response.products
-        pagination.value = response.pagination
-        currentPage.value = response.pagination.page
+        const response = await productSearchApi.searchProducts(params)
+        console.log('✅ Получен ответ:', response)
+        
+        this.products = response.products || []
+        this.pagination = response.pagination || this.pagination
         
       } catch (error) {
         console.error('Ошибка загрузки товаров:', error)
+        alert('Не удалось загрузить товары. Проверьте консоль для деталей.')
       } finally {
         this.loading = false
       }
@@ -383,32 +373,20 @@ export default defineComponent({
         page: this.currentPage,
         limit: this.pagination.limit
       }
-      
-      loadProducts()
-    })
-    
-    watch(() => route.query, () => {
-      loadProducts()
-    }, { deep: true })
-    
-    return {
-      products,
-      chunkedProducts,
-      loading,
-      pagination,
-      currentPage,
-      sortModel,
-      sortOptions,
-      searchQuery,
-      selectedCategory,
-      pageTitle,
-      totalProducts,
-      handlePageChange,
-      handleSortChange,
-      handleFilterChange,
-      resetAllFilters,
-      loadProducts
     }
   }
-})
+}
 </script>
+
+<style scoped>
+.sticky-filters {
+  position: sticky;
+  top: 20px;
+}
+
+.q-pagination {
+  border-radius: 8px;
+  padding: 8px;
+  background: white;
+}
+</style>
