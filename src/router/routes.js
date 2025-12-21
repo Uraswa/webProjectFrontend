@@ -50,7 +50,7 @@ const routes = [
       { 
         path: '', 
         name: 'checkout', 
-        component: () => import('pages/DEMO/CheckoutPage.vue') 
+        component: () => import('pages/CheckoutPage/index.vue') 
       }
     ]
   },
