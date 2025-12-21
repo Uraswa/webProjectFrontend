@@ -1,4 +1,3 @@
-<!-- widgets/ProductInfoPanel/ui/ProductInfoPanel.vue -->
 <template>
   <div class="column justify-between" style="height: 100%">
     <div>
@@ -43,15 +42,23 @@
         <span class="text-h4 text-weight-bold text-primary q-mr-md">{{ product.price }}₽</span>
       </div>
 
+      <!-- Кнопка добавления в корзину -->
       <q-btn
         label="Добавить в корзину"
         color="primary"
         size="lg"
         icon="shopping_cart"
         class="full-width q-mb-md"
-        @click="$emit('add-to-cart')"
+        @click="addToCart"
+        :loading="loading"
         unelevated
       />
+
+      <!-- Простое уведомление -->
+      <div v-if="showNotification" class="q-pa-sm q-mb-md text-center" style="background-color: #4caf50; color: white; border-radius: 4px;">
+        <q-icon name="check_circle" class="q-mr-sm" />
+        Товар добавлен в корзину!
+      </div>
 
       <q-btn
         label="Купить в 1 клик"
@@ -64,48 +71,86 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import type { Product } from 'entities/Product/models/Product'
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useCart } from 'src/features/cart/model/useCart';
 
-export default defineComponent({
-  name: 'ProductInfoPanel',
-  props: {
-    product: {
-      type: Object as PropType<Product>,
-      required: true
-    },
-    rating: {
-      type: Object as PropType<{ total_reviews: string; average_rating: string }>,
-      required: true
+const props = defineProps<{
+  product: {
+    product_id: number;
+    name: string;
+    description: string;
+    price: string;
+    category_name?: string;
+    shop_name?: string;
+  };
+  rating: {
+    total_reviews: string;
+    average_rating: string;
+  };
+}>();
+
+const emit = defineEmits<{
+  'buy-now': [];
+}>();
+
+const { updateCartItem } = useCart();
+const loading = ref(false);
+const showNotification = ref(false);
+let notificationTimeout: NodeJS.Timeout | null = null;
+
+async function addToCart() {
+  try {
+    loading.value = true;
+    showNotification.value = false;
+    
+    if (notificationTimeout) {
+      clearTimeout(notificationTimeout);
     }
-  },
-  emits: ['add-to-cart', 'buy-now'],
-  
-  methods: {
-    getReviewCountText(count: number): string {
-      if (typeof count !== 'number' || isNaN(count) || count < 0) {
-        return '0 отзывов'
-      }
-      
-      const lastDigit = count % 10
-      const lastTwoDigits = count % 100
-      
-      if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-        return `${count} отзывов`
-      }
-      
-      switch (lastDigit) {
-        case 1:
-          return `${count} отзыв`
-        case 2:
-        case 3:
-        case 4:
-          return `${count} отзыва`
-        default:
-          return `${count} отзывов`
-      }
-    }
+    
+    await updateCartItem(props.product.product_id, 1);
+    
+    // Показываем свое уведомление
+    showNotification.value = true;
+    
+    // Скрываем через 3 секунды
+    notificationTimeout = setTimeout(() => {
+      showNotification.value = false;
+    }, 3000);
+    
+  } catch (error) {
+    console.error('❌ Ошибка добавления в корзину:', error);
+    
+    // Можно показать ошибку
+    showNotification.value = true;
+    // Или сделать отдельное уведомление об ошибке
+    
+  } finally {
+    loading.value = false;
   }
-}) 
+}
+
+function getReviewCountText(count: number): string {
+  if (typeof count !== 'number' || isNaN(count) || count < 0) {
+    return '0 отзывов';
+  }
+  
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+    return `${count} отзывов`;
+  }
+  
+  switch (lastDigit) {
+    case 1:
+      return `${count} отзыв`;
+    case 2:
+    case 3:
+    case 4:
+      return `${count} отзыва`;
+    default:
+      return `${count} отзывов`;
+  }
+}
 </script>
