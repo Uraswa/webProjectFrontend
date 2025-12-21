@@ -1,6 +1,7 @@
 // frontend/src/features/productSearch/api/productSearchApi.ts
-import Api from 'src/shared/api/Api.js' // ✅ правильный импорт
+import Api from 'src/shared/api/Api.js'
 import type { ProductSearchParams, ProductSearchResponse, Pagination } from '../model/types'
+import { parseProductPhotos } from 'src/shared/utils/parsePhotos'  
 
 export const productSearchApi = {
   async searchProducts(params: ProductSearchParams): Promise<ProductSearchResponse> {
@@ -23,9 +24,15 @@ export const productSearchApi = {
       if (params.char_filters && params.char_filters.length > 0) {
         queryParams.append('char_filters', JSON.stringify(params.char_filters))
       }
-      
-      const url = `/api/products/search?${queryParams.toString()}`
-      const response = await Api.get(url)
+
+      if (params.search) query.search = params.search
+      if (params.category_id) query.category_id = params.category_id
+      if (params.shop_id) query.shop_id = params.shop_id
+      if (params.min_price) query.min_price = params.min_price
+      if (params.max_price) query.max_price = params.max_price
+
+      const queryString = new URLSearchParams(query).toString()
+      const response = await Api.get(`/api/products/search?${queryString}`)
 
       if (!response.data.success) {
         console.error('Product search failed', response.data)
@@ -36,9 +43,14 @@ export const productSearchApi = {
       }
 
       const { products, pagination } = response.data.data
+      
+      const fixedProducts = products.map(product => ({
+        ...product,
+        photos: parseProductPhotos(product.photos)
+      }))
 
       return {
-        products,
+        products: fixedProducts,
         pagination
       }
     } catch (error) {
