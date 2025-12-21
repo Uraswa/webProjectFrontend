@@ -1,14 +1,16 @@
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { cartApi } from '../api/cartApi';
 import { Cart, CartInfo } from '../types';
+import { useCartStore } from 'src/shared/store/cartStore';
 
 export function useCart() {
   const cart = ref<Cart | null>(null);
   const cartInfo = ref<CartInfo | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const cartStore = useCartStore();
 
-  const itemCount = computed(() => cartInfo.value?.item_count || 0);
+  const itemCount = computed(() => cartStore.itemCount.value);
   const totalPrice = computed(() => cart.value?.total || '0');
   const hasCart = computed(() => cartInfo.value?.exists || false);
 
@@ -17,6 +19,8 @@ export function useCart() {
       loading.value = true;
       error.value = null;
       cart.value = await cartApi.getCart();
+      // Обновляем глобальный счетчик
+      cartStore.setItemCount(cart.value.item_count);
     } catch (err: any) {
       error.value = err.response?.data?.error || 'Ошибка при загрузке корзины';
       console.error('Ошибка загрузки корзины:', err);
@@ -28,6 +32,10 @@ export function useCart() {
   async function fetchCartInfo() {
     try {
       cartInfo.value = await cartApi.getCartInfo();
+      // Обновляем глобальный счетчик
+      if (cartInfo.value) {
+        cartStore.setItemCount(cartInfo.value.item_count);
+      }
     } catch (err: any) {
       console.error('Ошибка загрузки информации о корзине:', err);
     }
@@ -37,7 +45,8 @@ export function useCart() {
     try {
       loading.value = true;
       cart.value = await cartApi.updateCartItem(productId, quantity);
-      await fetchCartInfo(); // Обновляем быструю информацию
+      // После обновления корзины обновляем информацию
+      await fetchCartInfo();
     } catch (err: any) {
       error.value = err.response?.data?.error || 'Ошибка при обновлении корзины';
       console.error('Ошибка обновления корзины:', err);
@@ -62,6 +71,8 @@ export function useCart() {
         exists: false,
         updated_at: new Date().toISOString()
       };
+      // Обновляем глобальный счетчик
+      cartStore.setItemCount(0);
     } catch (err: any) {
       error.value = err.response?.data?.error || 'Ошибка при очистке корзины';
       console.error('Ошибка очистки корзины:', err);
@@ -69,6 +80,12 @@ export function useCart() {
       loading.value = false;
     }
   }
+
+  // Загружаем корзину при инициализации
+  onMounted(() => {
+    fetchCart();
+    fetchCartInfo();
+  });
 
   return {
     cart,

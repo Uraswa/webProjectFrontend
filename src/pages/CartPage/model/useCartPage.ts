@@ -89,46 +89,38 @@ export function useCartPage() {
   onMounted(() => {
     fetchCart();
     
-    // При загрузке корзины, НЕ выбираем все автоматически
-    // Пользователь сам решит, что выбрать
+    // При загрузке выбираем все товары автоматически
+    watch(cartItems, (newItems) => {
+      if (newItems.length > 0 && selectedItems.value.length === 0) {
+        selectedItems.value = newItems.map(item => item.id);
+        selectAll.value = true;
+      }
+    }, { immediate: true });
   });
 
-  // Простая логика для selectAll
+  // Правильная логика для selectAll
   watch(selectedItems, (newSelected) => {
     if (cartItems.value.length === 0) {
       selectAll.value = false;
       return;
     }
     
-    // Выбраны ли ВСЕ товары?
-    const allSelected = cartItems.value.length > 0 && 
-                       cartItems.value.every(item => newSelected.includes(item.id));
+    // Проверяем, выбраны ли ВСЕ товары
+    const allSelected = cartItems.value.every(item => 
+      newSelected.includes(item.id)
+    );
     
-    // Выбран ли ХОТЯ БЫ ОДИН товар?
-    const someSelected = cartItems.value.some(item => newSelected.includes(item.id));
-    
-    if (allSelected) {
-      selectAll.value = true;
-    } else if (someSelected) {
-      selectAll.value = false; // Некоторые выбраны, но не все
-    } else {
-      selectAll.value = false; // Ничего не выбрано
-    }
+    selectAll.value = allSelected;
   }, { deep: true });
 
-  // Когда меняется selectAll
+  // Правильная логика при изменении selectAll
   watch(selectAll, (newValue) => {
-    if (newValue === true) {
-      // Ставим ВСЕ товары
+    if (newValue) {
+      // Выбираем все товары
       selectedItems.value = cartItems.value.map(item => item.id);
     } else {
-      // Если снимаем "Выбрать все", но у нас есть выбранные товары,
-      // это значит пользователь сам снял галочку с конкретного товара
-      // В этом случае НЕ трогаем выбранные товары
-      
-      // Только если selectAll был true и мы его снимаем программно
-      // (кликнули на "Выбрать все" когда он был активен)
-      // тогда очищаем все
+      // Если снимаем "Выбрать все" и все товары были выбраны,
+      // то снимаем все
       if (selectedItems.value.length === cartItems.value.length) {
         selectedItems.value = [];
       }

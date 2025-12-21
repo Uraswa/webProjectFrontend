@@ -19,22 +19,33 @@
       <ProductSearchInput />
     </div>
 
-    <div class="col-3" style="display:flex; justify-content: center;">
-      <q-btn round flat icon="shopping_basket" to="/cart/" />
-      <q-btn round flat icon="account_circle" to="/orders/" />
+    <div class="col-3" style="display:flex; justify-content: center; align-items: center; gap: 16px;">
+      <!-- Кнопка корзины с бейджиком -->
+      <q-btn round flat icon="shopping_basket" :to="{ name: 'cart' }">
+        <q-badge v-if="itemCount > 0" color="red" floating rounded>
+          {{ itemCount }}
+        </q-badge>
+        <q-tooltip>Корзина</q-tooltip>
+      </q-btn>
+      
+      <!-- Кнопка ЛК -->
+      <q-btn round flat icon="account_circle" :to="{ name: 'orders' }">
+        <q-tooltip>Мои заказы</q-tooltip>
+      </q-btn>
     </div>
   </div>
 </template>
 
-<script>
-import ProductSearchInput from 'src/features/productSearch/ui/productSearchInput.vue'
+<script setup lang="ts">
+import { computed } from 'vue';
+import { RouterLink } from 'vue-router';
+import ProductSearchInput from 'src/features/productSearch/ui/productSearchInput.vue';
+import { useCartStore } from 'src/shared/store/cartStore';
 
-export default {
-  name: 'Header',
-  components: {
-    ProductSearchInput
-  }
-}
+const cartStore = useCartStore();
+
+// Получаем количество товаров из глобального store
+const itemCount = computed(() => cartStore.itemCount.value);
 </script>
 
 <style scoped>
