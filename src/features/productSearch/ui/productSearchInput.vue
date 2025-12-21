@@ -1,3 +1,4 @@
+<!-- features/productSearch/ui/ProductSearchInput.vue -->
 <template>
   <div class="product-search-input">
     <q-input
@@ -6,8 +7,9 @@
       outlined
       dense
       @keyup.enter="onSearch"
+      class="q-mb-none"
     >
-      <template #append>
+      <template v-slot:append>
         <q-icon
           name="search"
           class="cursor-pointer"
