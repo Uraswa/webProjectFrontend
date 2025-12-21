@@ -1,9 +1,9 @@
 <template>
   <div class="row items-center header">
     <div class="col-1">
-      <RouterLink to="/">
+      <router-link to="/" style="text-decoration: none; color: inherit;">
         <p style="margin: 0; font-size: 2em">Sellzy</p>
-      </RouterLink>
+      </router-link>
     </div>
 
     <div class="col-2" style="display: flex; justify-content: space-around">
@@ -37,8 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { RouterLink } from 'vue-router';
+import { computed, onMounted } from 'vue';
 import ProductSearchInput from 'src/features/productSearch/ui/productSearchInput.vue';
 import { useCartStore } from 'src/shared/store/cartStore';
 
@@ -46,6 +45,11 @@ const cartStore = useCartStore();
 
 // Получаем количество товаров из глобального store
 const itemCount = computed(() => cartStore.itemCount.value);
+
+// Загружаем информацию о корзине при монтировании Header
+onMounted(() => {
+  cartStore.fetchCartInfo();
+});
 </script>
 
 <style scoped>

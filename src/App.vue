@@ -2,17 +2,13 @@
   <router-view />
 </template>
 
-<script>
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import { useCartStore } from './shared/store/cartStore';
 
-export default defineComponent({
-  name: 'App'
+const cartStore = useCartStore();
+
+onMounted(() => {
+  cartStore.fetchCartInfo();
 });
 </script>
-
-<style>
-a {
-  text-decoration: none;
-  color: inherit;
-}
-</style>
