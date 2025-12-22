@@ -16,22 +16,27 @@ export default {
   methods: {
     onSubmit: async function(){
       this.is_loading = true;
-      let response = await Api.post("/api/login", {
-        email: this.email,
-        password: this.password,
-      });
+      this.error_auth = "";
+      try {
+        let response = await Api.post("/api/login", {
+          email: this.email,
+          password: this.password,
+        });
 
-      if (response.status === 200 && response.data.success) {
-        let {accessToken, user_id } = response.data.data;
-        Api.setToken(accessToken);
-        this.$store.dispatch("setUserId", user_id)
-        const redirectUrl = this.$route.query.redirect || '/';
-        this.$router.push({ path: redirectUrl });
-      } else {
-        this.error_auth = response.data.error;
+        if (response.status === 200 && response.data.success) {
+          let {accessToken, user_id } = response.data.data;
+          Api.setToken(accessToken);
+          this.$store.dispatch("setUserId", user_id)
+          const redirectUrl = this.$route.query.redirect || '/';
+          this.$router.push({ path: redirectUrl });
+        } else {
+          this.error_auth = response.data.error;
+        }
+      } catch (error) {
+        this.error_auth = error?.response?.data?.error || error?.message || "Ошибка авторизации";
+      } finally {
+        this.is_loading = false;
       }
-
-      this.is_loading = false;
 
     }
 

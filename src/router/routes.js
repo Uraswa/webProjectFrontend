@@ -234,11 +234,13 @@ const routes = [
     ]
   },
   {
-    path: '/shop/:id/edit',
-    name: 'lk_seller_edit_shop',
-    component: () => import('layouts/LkSellerLayout.vue'),
+    path: '/seller/shops',
+    component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
-      {path: '', component: () => import('pages/DEMO/LkSeller/EditShop.vue')}
+      {
+        path: '', 
+        name: '',
+        component: () => import('pages/DEMO/LkSeller/EditShop.vue')}
     ]
   },
 
