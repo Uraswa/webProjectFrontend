@@ -1,7 +1,7 @@
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 
-let baseUrl = "http://localhost:8000/";
+let baseUrl = "http://localhost:3000/";
 
 const $api = axios.create({
   withCredentials: true,
@@ -9,10 +9,13 @@ const $api = axios.create({
 })
 
 $api.interceptors.request.use((config) => {
-  config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
   if (config.port) {
-    config.baseURL = `${baseUrl}:${config.port}`;
+    config.baseURL = `http://localhost:${config.port}/`;
     delete config.port; // Удаляем, чтобы не мешал
   }
 
@@ -78,7 +81,7 @@ export default class Api {
 
   static async refreshToken(){
     Api.isTokenRefreshing = true;
-    const response = await axios.post(`${baseUrl}/api/users/refreshToken`, {}, {withCredentials: true})
+    const response = await axios.post(`${baseUrl}api/refreshToken`, {}, {withCredentials: true})
     this.setToken(response.data.data.accessToken);
     Api.isTokenRefreshing = false;
     return response.data.data.accessToken;

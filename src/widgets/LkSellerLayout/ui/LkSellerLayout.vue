@@ -1,12 +1,52 @@
 <script>
+import { jwtDecode } from "jwt-decode";
+
+const getLoginRedirect = (to) => ({
+  path: "/login",
+  query: { redirect: to.fullPath },
+});
+
+const getSellerGuardRedirect = (to) => {
+  if (typeof window === "undefined") return null;
+
+  const token = localStorage.getItem("token");
+  if (!token) return getLoginRedirect(to);
+
+  try {
+    const decoded = jwtDecode(token);
+    const expMs = decoded?.exp ? decoded.exp * 1000 : null;
+
+    if (!decoded?.user_id) return getLoginRedirect(to);
+    if (expMs && expMs <= Date.now()) {
+      localStorage.removeItem("token");
+      return getLoginRedirect(to);
+    }
+  } catch {
+    localStorage.removeItem("token");
+    return getLoginRedirect(to);
+  }
+
+  return null;
+};
+
 export default {
   name: "LkSellerLayout",
-  data(){
+  data() {
     return {
-      leftDrawerOpen: true
-    }
-  }
-}
+      leftDrawerOpen: true,
+    };
+  },
+  beforeRouteEnter(to, from, next) {
+    const redirect = getSellerGuardRedirect(to);
+    if (redirect) return next(redirect);
+    return next();
+  },
+  beforeRouteUpdate(to, from, next) {
+    const redirect = getSellerGuardRedirect(to);
+    if (redirect) return next(redirect);
+    return next();
+  },
+};
 </script>
 
 <template>
@@ -41,12 +81,12 @@ export default {
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple to="/seller/shop">
+          <q-item clickable v-ripple to="/seller/shops">
             <q-item-section avatar>
               <q-icon name="store" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Магазин</q-item-label>
+              <q-item-label>Магазины</q-item-label>
             </q-item-section>
           </q-item>
         </q-list>

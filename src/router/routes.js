@@ -186,6 +186,12 @@ const routes = [
         path: '',
         name: 'seller-orders',
         component: () => import('pages/DEMO/LkSeller/OrdersList.vue')
+      },
+      {
+        path: ':id',
+        name: 'seller-order-details',
+        component: () => import('pages/DEMO/LkSeller/OrderDetails.vue'),
+        props: true
       }
     ]
   },
@@ -233,6 +239,19 @@ const routes = [
       }
     ]
   },
+  {
+    path: '/seller/shops',
+    component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
+    children: [
+      {
+        path: '', 
+        name: '',
+        component: () => import('pages/DEMO/LkSeller/EditShop.vue')}
+    ]
+  },
+
+  // Always leave this as last one,
+  // but you can also remove it
   {
     path: '/:catchAll(.*)*',
     name: 'not-found',

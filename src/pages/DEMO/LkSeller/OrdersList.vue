@@ -30,6 +30,10 @@
             <q-select
               v-model="statusFilter"
               :options="statusOptions"
+              option-label="label"
+              option-value="value"
+              emit-value
+              map-options
               label="Статус заказа"
               dense
               outlined
@@ -40,6 +44,10 @@
             <q-select
               v-model="pvzFilter"
               :options="pvzOptions"
+              option-label="label"
+              option-value="value"
+              emit-value
+              map-options
               label="ПВЗ"
               dense
               outlined
@@ -52,6 +60,7 @@
               color="primary"
               class="full-width"
               unelevated
+              @click="applyFilters"
             />
           </div>
         </div>
@@ -61,11 +70,10 @@
     <!-- Таблица заказов -->
     <q-card flat bordered>
       <q-table
-        :rows="orders"
+        :rows="filteredOrders"
         :columns="columns"
         row-key="id"
         :loading="loading"
-        :filter="searchQuery"
         flat
         bordered
       >
@@ -138,6 +146,17 @@
 </template>
 
 <script>
+import Api from "src/shared/api/Api.js";
+import { Notify } from "quasar";
+
+const STATUS_LABELS = {
+  packing: "Упаковывается",
+  shipping: "В пути",
+  waiting: "Ожидает в ПВЗ",
+  done: "Доставлен",
+  canceled: "Отменён",
+};
+
 export default {
   name: "SellerOrdersPage",
   data() {
@@ -145,13 +164,19 @@ export default {
       searchQuery: '',
       statusFilter: null,
       pvzFilter: null,
+      appliedSearchQuery: '',
+      appliedStatus: null,
+      appliedPvz: null,
       loading: false,
+      shopId: null,
       statusOptions: [
-        'packing', 'shipping', 'waiting', 'done', 'canceled'
+        { label: STATUS_LABELS.packing, value: 'packing' },
+        { label: STATUS_LABELS.shipping, value: 'shipping' },
+        { label: STATUS_LABELS.waiting, value: 'waiting' },
+        { label: STATUS_LABELS.done, value: 'done' },
+        { label: STATUS_LABELS.canceled, value: 'canceled' }
       ],
-      pvzOptions: [
-        'ПВЗ Уинская', 'ПВЗ Ленина', 'ПВЗ Попова'
-      ],
+      pvzOptions: [],
       columns: [
         {
           name: 'id',
@@ -203,54 +228,126 @@ export default {
           sortable: false
         }
       ],
-      orders: [
-        {
-          id: '123456',
-          total: 4300,
-          status: 'packing',
-          createdDate: '15.12.2024',
-          pvz: {
-            address: 'г. Пермь, ул. Уинская, 12',
-            workingHours: '09:00-21:00'
-          },
-          products: [
-            { photo: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { photo: 'https://cdn.quasar.dev/img/parallax1.jpg' },
-            { photo: 'https://cdn.quasar.dev/img/mountains.jpg' }
-          ]
-        },
-        {
-          id: '123455',
-          total: 2800,
-          status: 'shipping',
-          createdDate: '10.12.2024',
-          pvz: {
-            address: 'г. Пермь, ул. Ленина, 45',
-            workingHours: '10:00-20:00'
-          },
-          products: [
-            { photo: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { photo: 'https://cdn.quasar.dev/img/mountains.jpg' }
-          ]
-        },
-        {
-          id: '123454',
-          total: 5200,
-          status: 'waiting',
-          createdDate: '01.12.2024',
-          pvz: {
-            address: 'г. Пермь, ул. Попова, 23',
-            workingHours: '08:00-22:00'
-          },
-          products: [
-            { photo: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { photo: 'https://cdn.quasar.dev/img/parallax1.jpg' }
-          ]
-        }
-      ]
+      orders: []
+    }
+  },
+  mounted() {
+    this.fetchOpps();
+    this.fetchOrders();
+    this.applyFilters();
+  },
+  computed: {
+    filteredOrders() {
+      const search = String(this.appliedSearchQuery || '').trim().toLowerCase();
+      const status = this.appliedStatus;
+      const pvz = this.appliedPvz;
+
+      return (this.orders || []).filter((order) => {
+        if (search && !String(order.id || '').toLowerCase().includes(search)) return false;
+        if (status && order.status !== status) return false;
+        if (pvz && Number(order.opp_id) !== Number(pvz)) return false;
+        return true;
+      });
     }
   },
   methods: {
+    applyFilters() {
+      this.appliedSearchQuery = this.searchQuery;
+      this.appliedStatus = this.statusFilter;
+      this.appliedPvz = this.pvzFilter;
+    },
+    formatDate(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${dd}.${mm}.${yyyy}`;
+    },
+    extractFirstPhoto(productPhotos) {
+      if (!productPhotos) return null;
+      if (Array.isArray(productPhotos)) return productPhotos[0] || null;
+      if (typeof productPhotos === 'string') {
+        try {
+          const parsed = JSON.parse(productPhotos);
+          if (Array.isArray(parsed)) return parsed[0] || null;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    },
+    async fetchOpps() {
+      try {
+        const { data } = await Api.get('/api/opp');
+        const oppList = data?.success ? (data.data || []) : [];
+        this.pvzOptions = oppList.map((opp) => ({
+          label: opp.address,
+          value: opp.opp_id,
+        }));
+      } catch (error) {
+        console.error('Ошибка получения ПВЗ:', error);
+        Notify.create({ type: 'negative', message: 'Не удалось загрузить список ПВЗ' });
+      }
+    },
+    async fetchOrders() {
+      try {
+        this.loading = true;
+
+        const shopsResponse = await Api.get('/api/shops');
+        const shops = Array.isArray(shopsResponse.data)
+          ? shopsResponse.data
+          : (shopsResponse.data?.shops || []);
+
+        if (!shops.length) {
+          this.orders = [];
+          return;
+        }
+
+        this.shopId = shops[0].shop_id;
+        const { data } = await Api.get(`/api/orders/shop/${this.shopId}`);
+        const rows = Array.isArray(data) ? data : [];
+
+        const grouped = new Map();
+        for (const row of rows) {
+          const orderId = String(row.order_id);
+          const existing = grouped.get(orderId);
+          const photo = this.extractFirstPhoto(row.product_photos) || 'https://cdn.quasar.dev/img/parallax2.jpg';
+          const itemSubtotal = Number(row.ordered_count) * Number(row.price);
+
+          if (!existing) {
+            grouped.set(orderId, {
+              id: orderId,
+              opp_id: row.opp_id,
+              total: Number.isFinite(itemSubtotal) ? itemSubtotal : 0,
+              status: row.current_status,
+              createdDate: this.formatDate(row.created_date),
+              pvz: {
+                address: row.opp_address,
+                workingHours: row.opp_work_time ? JSON.stringify(row.opp_work_time) : ''
+              },
+              products: [{ photo }]
+            });
+          } else {
+            existing.total += Number.isFinite(itemSubtotal) ? itemSubtotal : 0;
+            if (existing.products.length < 3) {
+              existing.products.push({ photo });
+            }
+          }
+        }
+
+        this.orders = Array.from(grouped.values()).map((o) => ({
+          ...o,
+          total: Number(o.total).toFixed(2),
+        }));
+      } catch (error) {
+        console.error('Ошибка получения заказов:', error);
+        Notify.create({ type: 'negative', message: 'Не удалось загрузить заказы' });
+      } finally {
+        this.loading = false;
+      }
+    },
     getStatusColor(status) {
       const colors = {
         packing: 'orange',
@@ -262,14 +359,7 @@ export default {
       return colors[status] || 'grey'
     },
     getStatusText(status) {
-      const texts = {
-        packing: 'Упаковывается',
-        shipping: 'В пути',
-        waiting: 'Ожидает в ПВЗ',
-        done: 'Доставлен',
-        canceled: 'Отменен'
-      }
-      return texts[status] || 'Неизвестно'
+      return STATUS_LABELS[status] || 'Неизвестно'
     },
     updateStatus(order, newStatus) {
       // Логика обновления статуса заказа
