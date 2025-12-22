@@ -200,6 +200,17 @@ const routes = [
     ]
   },
   {
+    path: '/info',
+    component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
+    children: [
+      { 
+        path: '', 
+        name: 'info', 
+        component: () => import('pages/InfoPage.vue') 
+      }
+    ]
+  },
+  {
     path: '/:catchAll(.*)*',
     name: 'not-found',
     component: () => import('pages/ErrorNotFound.vue')
