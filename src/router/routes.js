@@ -182,10 +182,16 @@ const routes = [
     path: '/seller/orders',
     component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
+      { 
+        path: '', 
+        name: 'seller-orders', 
+        component: () => import('pages/DEMO/LkSeller/OrdersList.vue') 
+      },
       {
-        path: '',
-        name: 'seller-orders',
-        component: () => import('pages/DEMO/LkSeller/OrdersList.vue')
+        path: ':id',
+        name: 'seller-order-details',
+        component: () => import('pages/DEMO/LkSeller/OrderDetails.vue'),
+        props: true
       }
     ]
   },
