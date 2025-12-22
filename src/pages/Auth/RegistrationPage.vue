@@ -1,6 +1,6 @@
 ﻿<script>
-import Api from "src/helpers/Api.js";
-import CenteredFormPage from "layouts/CenteredFormPage.vue";
+import Api from "src/shared/api/Api.js";
+import CenteredFormPage from "src/shared/ui/CenteredFormPage.vue";
 
 export default {
   name: "RegistrationPage",
@@ -17,7 +17,7 @@ export default {
   methods: {
     onSubmit: async function () {
       this.is_loading = true;
-      let response = await Api.post("/api/users/createUser", {
+      let response = await Api.post("/api/createUser", {
         email: this.email,
         password: this.password
       });

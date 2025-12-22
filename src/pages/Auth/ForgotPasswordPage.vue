@@ -1,6 +1,6 @@
 ﻿<script>
-import Api from "src/helpers/Api.js";
-import CenteredFormPage from "layouts/CenteredFormPage.vue";
+import Api from "src/shared/api/Api.js";
+import CenteredFormPage from "src/shared/ui/CenteredFormPage.vue";
 
 export default {
   name: "ForgotPasswordPage",
@@ -15,7 +15,7 @@ export default {
   methods: {
     async onSubmit(){
       this.is_loading = true;
-      let response = await Api.post('/api/users/forgotPassword', {
+      let response = await Api.post('/api/forgotPassword', {
         email: this.email
       });
       if (response.status === 200 && response.data.success) {

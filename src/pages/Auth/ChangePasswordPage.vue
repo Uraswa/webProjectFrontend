@@ -1,6 +1,6 @@
 ﻿<script>
-import Api from "src/helpers/Api.js";
-import CenteredFormPage from "layouts/CenteredFormPage.vue";
+import Api from "src/shared/api/Api.js";
+import CenteredFormPage from "src/shared/ui/CenteredFormPage.vue";
 
 export default {
   name: "ChangePasswordPage",
@@ -15,7 +15,7 @@ export default {
   methods:{
     async onSubmit(){
       this.is_loading = true;
-      let response = await Api.post("/api/users/changePassword", {
+      let response = await Api.post("/api/changePassword", {
         password_change_token: this.$route.params.link,
         password: this.password
       });
