@@ -91,7 +91,7 @@ export default {
   },
   watch: {
     "addToCartCount"(newValue, oldValue){
-       if (newValue > this.product.count) {
+       if (newValue >= this.product.count) {
          this.addToCartCount = this.product.count;
        }
     }

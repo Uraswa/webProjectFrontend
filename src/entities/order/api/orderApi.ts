@@ -38,6 +38,11 @@ export interface OrderResponse {
   data: OrderData
 }
 
+export interface CancelOrderResponse {
+  success: boolean
+  error?: string
+}
+
 export const orderApi = {
   async getOrder(orderId: number | string): Promise<OrderData> {
     try {
@@ -63,6 +68,53 @@ export const orderApi = {
     } catch (error: any) {
       console.error('Error fetching order:', error.message)
       throw error
+    }
+  },
+
+  async cancelOrder(orderId: number | string): Promise<CancelOrderResponse> {
+    try {
+      const response = await Api.post(`/api/orders/${orderId}/cancel`, {
+        order_id: orderId
+      })
+
+      return {
+        success: response.data.success,
+        error: response.data.error
+      }
+
+    } catch (error: any) {
+      console.error('Error cancelling order:', error)
+
+      // Handle HTTP error responses
+      if (error.response) {
+        const status = error.response.status
+        const errorData = error.response.data
+
+        if (status === 404) {
+          return {
+            success: false,
+            error: errorData.error || 'order_not_found'
+          }
+        }
+
+        if (status === 500) {
+          return {
+            success: false,
+            error: errorData.error || 'server_error'
+          }
+        }
+
+        return {
+          success: false,
+          error: errorData.error || 'unknown_error'
+        }
+      }
+
+      // Network or other errors
+      return {
+        success: false,
+        error: 'network_error'
+      }
     }
   },
 

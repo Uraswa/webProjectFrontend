@@ -65,7 +65,10 @@
 
                   <q-item-section>
                     <q-item-label class="text-weight-medium">{{ item.name }}</q-item-label>
-                    <q-item-label caption>Количество: {{ item.ordered_count }} шт.</q-item-label>
+                    <q-item-label caption>Количество: {{ item.ordered_count }} шт.
+                      <span class="text-red" v-if="item.returned_count">
+                        Возвращено: {{item.returned_count}} шт
+                    </span></q-item-label>
                   </q-item-section>
 
                   <q-item-section side>
@@ -241,7 +244,42 @@ export default {
       }
     },
     async cancelOrder(){
+      // Подтверждение от пользователя
+      const confirmed = confirm('Вы уверены, что хотите отменить этот заказ?');
+      if (!confirmed) {
+        return;
+      }
 
+      try {
+        this.loading = true;
+        const result = await orderApi.cancelOrder(this.orderId);
+
+        if (result.success) {
+          alert('Заказ успешно отменен');
+          // Перезагружаем данные заказа
+          await this.fetchOrder();
+        } else {
+          // Обработка различных ошибок
+          switch (result.error) {
+            case 'order_not_found':
+              alert('Заказ не найден. Возможно, он уже был удален.');
+              break;
+            case 'server_error':
+              alert('Произошла ошибка сервера при отмене заказа. Пожалуйста, попробуйте позже.');
+              break;
+            case 'network_error':
+              alert('Ошибка соединения с сервером. Проверьте подключение к интернету.');
+              break;
+            default:
+              alert(`Не удалось отменить заказ: ${result.error || 'Неизвестная ошибка'}`);
+          }
+        }
+      } catch (err) {
+        console.error('Error cancelling order:', err);
+        alert('Произошла непредвиденная ошибка при отмене заказа');
+      } finally {
+        this.loading = false;
+      }
     },
     formatDate(dateString) {
       if (!dateString) return ''

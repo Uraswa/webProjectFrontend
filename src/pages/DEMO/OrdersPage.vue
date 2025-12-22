@@ -99,8 +99,8 @@
                   <div class="text-h6 text-weight-bold">Заказ #{{ order.id }}</div>
                   <div class="text-caption text-grey-7">от {{ order.date }}</div>
                 </div>
-                <div class="text-caption text-green">
-                  Доставлен {{ order.deliveredDate }}
+                <div class="text-caption" :class="order.current_status == 'Отменен' ? 'text-red' : 'text-green'">
+                  {{ order.current_status }} {{ order.last_status_date }}
                 </div>
               </div>
 
@@ -125,11 +125,11 @@
 
               <div class="row items-center justify-between">
                 <div class="text-h6 text-primary">{{ order.total }}₽</div>
-                <q-btn
-                  label="Оценить товары"
-                  to="/product/"
+                 <q-btn
+                  label="Подробнее"
                   color="primary"
-                  unelevated
+                  outline
+                  :to="`/order/${order.id}`"
                   size="sm"
                 />
               </div>
@@ -192,7 +192,7 @@ export default {
           orders.forEach(order => {
             const formattedOrder = this.formatOrder(order);
 
-            if (order.current_status === 'done') {
+            if (order.current_status === 'Отменен' || order.current_status === 'Завершен') {
               this.completedOrders.push(formattedOrder);
             } else {
               this.currentOrders.push(formattedOrder);
@@ -211,6 +211,8 @@ export default {
         date: this.formatDate(order.created_date),
         deliveredDate: order.received_date ? this.formatDate(order.received_date) : null,
         status: order.current_status || 'packing',
+        current_status: order.current_status || 'Упаковывается',
+        last_status_date: order.last_status_date ? this.formatDate(order.last_status_date) : this.formatDate(order.created_date),
         total: parseFloat(order.total),
         items: order.products.map(product => ({
           image: this.getProductImage(product.photos),
