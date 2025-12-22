@@ -53,6 +53,9 @@
         :loading="loading"
         flat
         bordered
+        rows-per-page-label="Записей на странице"
+        :rows-per-page-options="[5, 10, 20, 50]"
+        :pagination-label="paginationLabel"
         no-data-label="Магазины не найдены"
       >
         <template v-slot:body-cell-owner="props">
@@ -100,7 +103,7 @@
         </q-card-section>
 
         <q-form @submit.prevent="submitForm">
-          <q-card-section class="q-gutter-md">
+          <q-card-section class="q-gutter-sm">
             <q-input
               v-model="form.name"
               label="Название"
@@ -128,20 +131,14 @@
               ]"
             />
 
-            <q-select
-              v-model="form.owner"
-              label="Владелец"
-              :options="ownerOptions"
-              :loading="ownerLoading"
-              option-label="label"
-              option-value="value"
-              use-input
-              fill-input
-              hide-selected
-              clearable
-              input-debounce="400"
-              @filter="filterOwners"
-              :rules="[val => !!val || 'Владелец обязателен']"
+            <q-input
+              v-model.number="form.ownerId"
+              label="ID владельца"
+              type="number"
+              dense
+              outlined
+              class="q-mt-sm"
+              :rules="[val => val !== null && val !== '' || 'ID владельца обязателен']"
             />
 
             <div v-if="formError" class="text-negative text-caption">
@@ -187,7 +184,6 @@
 
 <script>
 import { adminShopsApi } from "src/features/adminShops/api/adminShopsApi.js";
-import { adminUsersApi } from "src/features/adminUsers/api/adminUsersApi.js";
 
 export default {
   name: "AdminShopsPage",
@@ -240,15 +236,13 @@ export default {
         id: null,
         name: "",
         description: "",
-        owner: null
+        ownerId: null
       },
       formError: "",
       saving: false,
       deleteDialog: false,
       deleteTarget: null,
       deleting: false,
-      ownerOptions: [],
-      ownerLoading: false
     };
   },
   computed: {
@@ -297,9 +291,7 @@ export default {
       this.form.name = shop.name || "";
       this.form.description = shop.description || "";
 
-      const ownerOption = this.ownerOptionFromShop(shop);
-      this.form.owner = ownerOption;
-      this.ownerOptions = ownerOption ? [ownerOption] : [];
+      this.form.ownerId = shop.owner_id ?? null;
       this.formDialog = true;
     },
 
@@ -312,7 +304,7 @@ export default {
       this.formError = "";
       const name = this.form.name ? this.form.name.trim() : "";
       const description = this.form.description ? this.form.description.trim() : "";
-      const ownerId = this.form.owner?.value;
+      const ownerId = this.form.ownerId;
 
       if (!name) {
         this.formError = "Название обязательно.";
@@ -320,7 +312,7 @@ export default {
       }
 
       if (!ownerId) {
-        this.formError = "Владелец обязателен.";
+        this.formError = "ID владельца обязателен.";
         return;
       }
 
@@ -367,81 +359,6 @@ export default {
       }
     },
 
-    async filterOwners(val, update, abort) {
-      if (this.ownerLoading) {
-        abort();
-        return;
-      }
-
-      this.ownerLoading = true;
-      const search = val ? val.trim() : "";
-
-      try {
-        const response = await adminUsersApi.listActiveUsers(search);
-        const payload = response?.data;
-
-        if (payload?.success === false) {
-          this.formError = payload.error || "Не удалось загрузить пользователей.";
-          update(() => {
-            this.ownerOptions = this.keepSelectedOwner([]);
-          });
-          return;
-        }
-
-        const data = payload?.data || [];
-        const options = Array.isArray(data)
-          ? data.map(this.buildOwnerOption)
-          : [];
-
-        update(() => {
-          this.ownerOptions = this.keepSelectedOwner(options);
-        });
-      } catch (error) {
-        if (this.handleAdminError(error)) {
-          abort();
-          return;
-        }
-        this.formError = this.getErrorMessage(error, "Не удалось загрузить пользователей.");
-        update(() => {
-          this.ownerOptions = this.keepSelectedOwner([]);
-        });
-      } finally {
-        this.ownerLoading = false;
-      }
-    },
-
-    buildOwnerOption(user) {
-      const name = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
-      const parts = [];
-      if (name) parts.push(name);
-      if (user.email) parts.push(user.email);
-      const fallback = user.user_id ? `Пользователь #${user.user_id}` : "Пользователь";
-
-      return {
-        label: parts.length ? parts.join(" - ") : fallback,
-        value: user.user_id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name
-      };
-    },
-
-    ownerOptionFromShop(shop) {
-      if (!shop?.owner_id) return null;
-      return this.buildOwnerOption({
-        user_id: shop.owner_id,
-        email: shop.email,
-        first_name: shop.first_name,
-        last_name: shop.last_name
-      });
-    },
-
-    keepSelectedOwner(options) {
-      if (!this.form.owner) return options;
-      const exists = options.some(option => option.value === this.form.owner.value);
-      return exists ? options : [this.form.owner, ...options];
-    },
-
     getOwnerPrimary(shop) {
       const name = [shop.first_name, shop.last_name].filter(Boolean).join(" ").trim();
       if (name) return name;
@@ -470,16 +387,22 @@ export default {
       return error?.response?.data?.error || error?.message || fallback;
     },
 
+    paginationLabel(firstRow, endRow, totalRows) {
+      if (totalRows === 0) {
+        return "0 из 0";
+      }
+      return `${firstRow}-${endRow} из ${totalRows}`;
+    },
+
     resetForm() {
       this.formMode = "create";
       this.form = {
         id: null,
         name: "",
         description: "",
-        owner: null
+        ownerId: null
       };
       this.formError = "";
-      this.ownerOptions = [];
     }
   }
 };
