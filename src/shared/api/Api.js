@@ -24,15 +24,18 @@ $api.interceptors.request.use((config) => {
 $api.interceptors.response.use((config) => {
   return config;
 },async (error) => {
-  const originalRequest = error.config;
-  if (error.response.status === 401 && error.config && !error.config._isRetry) {
+  const status = error?.response?.status;
+  const originalRequest = error?.config;
+  if (status === 401 && originalRequest && !originalRequest._isRetry) {
     originalRequest._isRetry = true;
     try {
       await Api.refreshToken();
       return $api.request(originalRequest);
     } catch (e) {
       console.log(e);
-      window.em.send('NOT_AUTHORIZED')
+      if (typeof window !== 'undefined' && window?.em?.send) {
+        window.em.send('NOT_AUTHORIZED')
+      }
     }
   }
   throw error;
@@ -93,6 +96,16 @@ export default class Api {
 
   static async post(endPoint, data){
     return await $api.post(endPoint, data);
+
+  }
+
+  static async put(endPoint, data){
+    return await $api.put(endPoint, data);
+
+  }
+
+  static async delete(endPoint){
+    return await $api.delete(endPoint);
 
   }
 }

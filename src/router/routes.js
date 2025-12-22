@@ -200,6 +200,28 @@ const routes = [
     ]
   },
   {
+    path: '/admin/shops',
+    component: () => import('src/widgets/AdminLayout/ui/AdminLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'admin-shops',
+        component: () => import('pages/Admin/ShopsPage.vue')
+      }
+    ]
+  },
+  {
+    path: '/admin/opps',
+    component: () => import('src/widgets/AdminLayout/ui/AdminLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'admin-opps',
+        component: () => import('pages/Admin/OppsPage.vue')
+      }
+    ]
+  },
+  {
     path: '/:catchAll(.*)*',
     name: 'not-found',
     component: () => import('pages/ErrorNotFound.vue')
