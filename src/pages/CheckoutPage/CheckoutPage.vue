@@ -209,7 +209,12 @@ export default {
         if (response.data.success) {
            this.$router.push("/orderMade/")
         } else {
-          alert("Ошибка")
+          if (response.data.error === 'products_count_changed') {
+            alert("Пришлось изменить количество некоторых товаров в корзине, поскольку изначальное кол-во больше недоступно на складе");
+            this.cartItems = response.data.data.cart.items;
+
+            this.calculateTotalPrice();
+          }
         }
 
 

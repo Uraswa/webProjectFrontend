@@ -50,18 +50,14 @@
         @click="addToCart"
         :loading="loading"
         unelevated
+        :disabled="product.count == 0"
       />
-      <div style="display: flex">
+      <span v-if="product.count == 0" class="text-red">Товар закончился!</span>
+      <span v-else>Осталось {{product.count}} единиц товара</span>
+      <div v-if="product.count > 0" style="display: flex">
         <q-btn @click="addToCartCount = addToCartCount > 1 ? addToCartCount - 1 : 1">-</q-btn>
         <q-input v-model="addToCartCount"/>
         <q-btn @click="addToCartCount++">+</q-btn>
-      </div>
-
-      <!-- Простое уведомление -->
-      <div v-if="showNotification" class="q-pa-sm q-mb-md text-center"
-           style="background-color: #4caf50; color: white; border-radius: 4px;">
-        <q-icon name="check_circle" class="q-mr-sm"/>
-        Товар добавлен в корзину!
       </div>
 
     </div>
@@ -77,7 +73,8 @@ export default {
   data() {
     return {
       loading: false,
-      addToCartCount: 1
+      addToCartCount: 1,
+      showNotification: false
     }
   },
   methods: {
@@ -88,7 +85,15 @@ export default {
 
       alert("Добавил в корзину")
 
+      this.showNotification = true;
       this.loading = false;
+    }
+  },
+  watch: {
+    "addToCartCount"(newValue, oldValue){
+       if (newValue > this.product.count) {
+         this.addToCartCount = this.product.count;
+       }
     }
   }
 }
