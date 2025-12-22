@@ -77,13 +77,14 @@ const routes = [
     ]
   },
   {
-    path: '/order/',
+    path: '/order/:orderId',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'order', 
-        component: () => import('pages/DEMO/OrderPage.vue') 
+      {
+        path: '',
+        name: 'order',
+        component: () => import('pages/DEMO/OrderPage.vue'),
+        props: true
       }
     ]
   },

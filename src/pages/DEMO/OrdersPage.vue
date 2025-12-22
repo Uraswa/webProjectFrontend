@@ -75,7 +75,7 @@
                   label="Подробнее"
                   color="primary"
                   outline
-                  to="/order/"
+                  :to="`/order/${order.id}`"
                   size="sm"
                 />
               </div>
@@ -161,81 +161,89 @@
 </template>
 
 <script>
+import Api from "src/shared/api/Api.js";
+
 export default {
   name: "OrdersPage",
   data() {
     return {
       currentTab: 'current',
-      currentOrders: [
-        {
-          id: '123456',
-          date: '15 декабря 2024',
-          status: 'shipping',
-          total: 4300,
-          items: [
-            { image: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { image: 'https://cdn.quasar.dev/img/parallax1.jpg' },
-            { image: 'https://cdn.quasar.dev/img/mountains.jpg' },
-            { image: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { image: 'https://cdn.quasar.dev/img/parallax1.jpg' }
-          ]
-        },
-        {
-          id: '123455',
-          date: '10 декабря 2024',
-          status: 'packing',
-          total: 2800,
-          items: [
-            { image: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { image: 'https://cdn.quasar.dev/img/mountains.jpg' }
-          ]
-        }
-      ],
-      completedOrders: [
-        {
-          id: '123454',
-          date: '1 декабря 2024',
-          deliveredDate: '5 декабря 2024',
-          total: 5200,
-          items: [
-            { image: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { image: 'https://cdn.quasar.dev/img/parallax1.jpg' },
-            { image: 'https://cdn.quasar.dev/img/mountains.jpg' }
-          ]
-        },
-        {
-          id: '123453',
-          date: '20 ноября 2024',
-          deliveredDate: '25 ноября 2024',
-          total: 3100,
-          items: [
-            { image: 'https://cdn.quasar.dev/img/parallax2.jpg' },
-            { image: 'https://cdn.quasar.dev/img/parallax1.jpg' }
-          ]
-        }
-      ]
+      currentOrders: [],
+      completedOrders: [],
+      isLoading: false
     }
   },
+  async mounted() {
+    await this.fetchOrders();
+  },
   methods: {
+    async fetchOrders() {
+      this.isLoading = true;
+      try {
+        const response = await Api.get("/api/orders");
+
+        if (response.status === 200 && response.data.success) {
+          const orders = response.data.data;
+
+          // Разделяем заказы на текущие и завершенные
+          this.currentOrders = [];
+          this.completedOrders = [];
+
+          orders.forEach(order => {
+            const formattedOrder = this.formatOrder(order);
+
+            if (order.current_status === 'done') {
+              this.completedOrders.push(formattedOrder);
+            } else {
+              this.currentOrders.push(formattedOrder);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    formatOrder(order) {
+      return {
+        id: order.order_id,
+        date: this.formatDate(order.created_date),
+        deliveredDate: order.received_date ? this.formatDate(order.received_date) : null,
+        status: order.current_status || 'packing',
+        total: parseFloat(order.total),
+        items: order.products.map(product => ({
+          image: this.getProductImage(product.photos),
+          name: product.name
+        }))
+      };
+    },
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('ru-RU', options);
+    },
+    getProductImage(photosString) {
+      try {
+        const photos = JSON.parse(photosString);
+        return photos && photos.length > 0 ? photos[0] : 'https://cdn.quasar.dev/img/image-placeholder.png';
+      } catch (e) {
+        return 'https://cdn.quasar.dev/img/image-placeholder.png';
+      }
+    },
     getStatusColor(status) {
       const colors = {
-        packing: 'orange',
-        shipping: 'blue',
-        waiting: 'yellow',
-        done: 'green',
-        canceled: 'red'
+        "Упаковывается": 'orange',
+        "Передан в доставку": 'blue',
+        "Ожидает в ПВЗ": 'yellow',
+        "Завершен": 'green',
+        "Отменен": 'red'
       }
       return colors[status] || 'grey'
     },
     getStatusText(status) {
-      const texts = {
-        packing: 'Упаковывается',
-        shipping: 'В пути',
-        waiting: 'Ожидает в ПВЗ',
-        done: 'Доставлен',
-        canceled: 'Отменен'
-      }
-      return texts[status] || 'Неизвестно'
+
+      return (status)
     },
     logout() {
       localStorage.removeItem('token');
