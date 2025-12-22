@@ -20,8 +20,8 @@
     </div>
 
     <div class="col-3" style="display:flex; justify-content: center;">
-      <q-btn round flat icon="shopping_basket" @click="handleCartClick" />
-      <q-btn round flat icon="account_circle" @click="handleAccountClick" />
+      <q-btn round flat icon="shopping_basket" to="/cart/" />
+      <q-btn round flat icon="account_circle" to="/orders/" />
     </div>
   </div>
 </template>
