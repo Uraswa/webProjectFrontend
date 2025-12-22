@@ -17,7 +17,7 @@ export default {
   methods: {
     onSubmit: async function () {
       this.is_loading = true;
-      let response = await Api.post("/api/users/createUser", {
+      let response = await Api.post("/api/createUser", {
         email: this.email,
         password: this.password
       });

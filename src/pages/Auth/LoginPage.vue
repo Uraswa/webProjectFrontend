@@ -16,7 +16,7 @@ export default {
   methods: {
     onSubmit: async function(){
       this.is_loading = true;
-      let response = await Api.post("/api/users/login", {
+      let response = await Api.post("/api/login", {
         email: this.email,
         password: this.password,
       });
@@ -25,7 +25,8 @@ export default {
         let {accessToken, user_id } = response.data.data;
         Api.setToken(accessToken);
         this.$store.dispatch("setUserId", user_id)
-        this.$router.push({ path: "/" });
+        const redirectUrl = this.$route.query.redirect || '/';
+        this.$router.push({ path: redirectUrl });
       } else {
         this.error_auth = response.data.error;
       }

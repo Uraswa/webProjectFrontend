@@ -6,7 +6,10 @@
       <q-breadcrumbs-el label="Мои заказы" />
     </q-breadcrumbs>
 
-    <div class="text-h4 text-weight-bold q-mb-lg">Мои заказы</div>
+    <div class="row q-col-gutter-lg">
+      <!-- Основная колонка с заказами -->
+      <div class="col-12 col-md-9">
+        <div class="text-h4 text-weight-bold q-mb-lg">Мои заказы</div>
 
     <!-- Вкладки -->
     <q-tabs
@@ -135,6 +138,25 @@
         </div>
       </q-tab-panel>
     </q-tab-panels>
+      </div>
+
+      <!-- Боковая колонка с кнопкой выхода -->
+      <div class="col-12 col-md-3">
+        <q-card flat bordered>
+          <q-card-section>
+            <div class="text-h6 q-mb-md">Профиль</div>
+            <q-btn
+              label="Выйти"
+              color="negative"
+              outline
+              icon="logout"
+              class="full-width"
+              @click="logout"
+            />
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
   </q-page>
 </template>
 
@@ -214,6 +236,11 @@ export default {
         canceled: 'Отменен'
       }
       return texts[status] || 'Неизвестно'
+    },
+    logout() {
+      localStorage.removeItem('token');
+      this.$store.dispatch('setUserId', 0);
+      this.$router.push('/login');
     }
   }
 }

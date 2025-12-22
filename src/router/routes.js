@@ -148,10 +148,21 @@ const routes = [
     path: '/mail-sent',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'mail-sent', 
-        component: () => import('pages/Auth/MailSentPage.vue') 
+      {
+        path: '',
+        name: 'mail-sent',
+        component: () => import('pages/Auth/MailSentPage.vue')
+      }
+    ]
+  },
+  {
+    path: '/createProfile',
+    component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'create-profile',
+        component: () => import('pages/Auth/CreateProfilePage.vue')
       }
     ]
   },
