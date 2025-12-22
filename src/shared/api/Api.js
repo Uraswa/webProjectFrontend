@@ -96,16 +96,17 @@ export default class Api {
 
   static async post(endPoint, data){
     return await $api.post(endPoint, data);
-
   }
 
   static async put(endPoint, data){
     return await $api.put(endPoint, data);
+  }
 
+  static async patch(endPoint, data){
+    return await $api.patch(endPoint, data);
   }
 
   static async delete(endPoint){
     return await $api.delete(endPoint);
-
   }
 }
