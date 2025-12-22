@@ -33,19 +33,16 @@
 </template>
 
 <script>
-import { getCategoryById } from 'src/entities/catalog/config/categories'
-
 export default {
   name: 'SubcategoryList',
   props: {
     categoryId: {
-      type: String,
-      required: true
-    }
-  },
-  computed: {
-    category() {
-      return getCategoryById(this.categoryId)
+      type: [String, Number],
+      required: false
+    },
+    category: {
+      type: Object,
+      default: null
     }
   },
   methods: {

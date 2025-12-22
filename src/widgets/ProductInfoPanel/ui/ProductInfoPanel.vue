@@ -1,4 +1,3 @@
-<!-- widgets/ProductInfoPanel/ui/ProductInfoPanel.vue -->
 <template>
   <div class="column justify-between" style="height: 100%">
     <div>
@@ -29,9 +28,7 @@
                 readonly
                 class="q-mr-sm"
               />
-              <span class="text-caption text-grey-7">
-                {{ getReviewCountText(parseInt(rating.total_reviews) || 0) }}
-              </span>
+
             </div>
           </q-item-section>
         </q-item>
@@ -43,69 +40,62 @@
         <span class="text-h4 text-weight-bold text-primary q-mr-md">{{ product.price }}₽</span>
       </div>
 
+      <!-- Кнопка добавления в корзину -->
       <q-btn
         label="Добавить в корзину"
         color="primary"
         size="lg"
         icon="shopping_cart"
         class="full-width q-mb-md"
-        @click="$emit('add-to-cart')"
+        @click="addToCart"
+        :loading="loading"
         unelevated
+        :disabled="product.count == 0"
       />
+      <span v-if="product.count == 0" class="text-red">Товар закончился!</span>
+      <span v-else>Осталось {{product.count}} единиц товара</span>
+      <div v-if="product.count > 0" style="display: flex">
+        <q-btn @click="addToCartCount = addToCartCount > 1 ? addToCartCount - 1 : 1">-</q-btn>
+        <q-input v-model="addToCartCount"/>
+        <q-btn @click="addToCartCount++">+</q-btn>
+      </div>
 
-      <q-btn
-        label="Купить в 1 клик"
-        color="deep-orange"
-        outline
-        class="full-width"
-        @click="$emit('buy-now')"
-      />
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import type { Product } from 'entities/Product/models/Product'
+<script>
+import {cartApi} from "src/features/cart/api/cartApi.js";
 
-export default defineComponent({
-  name: 'ProductInfoPanel',
-  props: {
-    product: {
-      type: Object as PropType<Product>,
-      required: true
-    },
-    rating: {
-      type: Object as PropType<{ total_reviews: string; average_rating: string }>,
-      required: true
+export default {
+  name: "ProductInfoPanel",
+  props: ["product", "rating"],
+  data() {
+    return {
+      loading: false,
+      addToCartCount: 1,
+      showNotification: false
     }
   },
-  emits: ['add-to-cart', 'buy-now'],
-  
   methods: {
-    getReviewCountText(count: number): string {
-      if (typeof count !== 'number' || isNaN(count) || count < 0) {
-        return '0 отзывов'
-      }
-      
-      const lastDigit = count % 10
-      const lastTwoDigits = count % 100
-      
-      if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-        return `${count} отзывов`
-      }
-      
-      switch (lastDigit) {
-        case 1:
-          return `${count} отзыв`
-        case 2:
-        case 3:
-        case 4:
-          return `${count} отзыва`
-        default:
-          return `${count} отзывов`
-      }
+    async addToCart() {
+      this.loading = true;
+
+      await cartApi.updateCartItem(this.product.product_id, this.addToCartCount, true);
+
+      alert("Добавил в корзину")
+
+      this.showNotification = true;
+      this.loading = false;
+    }
+  },
+  watch: {
+    "addToCartCount"(newValue, oldValue){
+       if (newValue >= this.product.count) {
+         this.addToCartCount = this.product.count;
+       }
     }
   }
-}) 
+}
 </script>
+
