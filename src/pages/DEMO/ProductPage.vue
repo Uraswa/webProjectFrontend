@@ -22,7 +22,7 @@
         <q-breadcrumbs-el
           v-if="product.category_name"
           :label="product.category_name"
-          :to="`/category/${product.category_id}`"
+          :to="`/search?category_id=${product.category_id}`"
         />
         <q-breadcrumbs-el :label="product.name"/>
       </q-breadcrumbs>
