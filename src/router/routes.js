@@ -39,7 +39,7 @@ const routes = [
       { 
         path: '', 
         name: 'cart', 
-        component: () => import('pages/DEMO/CartPage.vue') 
+        component: () => import('pages/CartPage/index.vue') 
       }
     ]
   },
@@ -50,7 +50,7 @@ const routes = [
       { 
         path: '', 
         name: 'checkout', 
-        component: () => import('pages/DEMO/CheckoutPage.vue') 
+        component: () => import('pages/CheckoutPage/index.vue') 
       }
     ]
   },

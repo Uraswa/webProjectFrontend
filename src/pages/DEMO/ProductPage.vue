@@ -39,7 +39,6 @@
           <ProductInfoPanel 
             :product="product"
             :rating="rating"
-            @add-to-cart="addToCart"
             @buy-now="buyNow"
           />
         </div>
@@ -59,12 +58,6 @@
         :initial-rating="rating"
         class="q-mt-xl"
       />
-
-      <!-- Похожие товары -->
-      <div v-if="similarProducts.length > 0" class="q-mt-xl">
-        <div class="text-h5 text-weight-bold q-mb-lg">Похожие товары</div>
-        <DemoProductsGrid :products="similarProducts" />
-      </div>
     </div>
 
     <!-- Товар не найден -->
@@ -86,11 +79,9 @@ import ProductGallery from 'src/widgets/ProductGallery/ui/ProductGallery.vue'
 import ProductInfoPanel from 'src/widgets/ProductInfoPanel/ui/ProductInfoPanel.vue'
 import ProductCharacteristics from 'src/widgets/ProductCharacteristics/ui/ProductCharacteristics.vue'
 import ProductReviewsWidget from 'src/widgets/ProductReviewsWidget/ui/ProductReviewsWidget.vue'
-import DemoProductsGrid from 'src/widgets/DemoProductsGrid/ui/DemoProductsGrid.vue'
 
 // API
 import { productDetailsApi } from 'src/features/productDetails/api/productDetailsApi'
-import { characteristicsApi } from 'src/features/productDetails/api/characteristicsApi'
 
 // Types
 import type { Product } from 'src/entities/Product/models/Product'
@@ -103,8 +94,7 @@ export default defineComponent({
     ProductGallery,
     ProductInfoPanel,
     ProductCharacteristics,
-    ProductReviewsWidget,
-    DemoProductsGrid
+    ProductReviewsWidget
   },
   
   data() {
@@ -114,8 +104,7 @@ export default defineComponent({
       rating: { total_reviews: '0', average_rating: '0' } as ProductRating,
       loading: true,
       error: null as string | null,
-      productId: 0,
-      similarProducts: [] as Product[]
+      productId: 0
     }
   },
   
@@ -196,95 +185,11 @@ export default defineComponent({
         this.feedback = response.feedback
         this.rating = response.rating
         
-        // Загружаем похожие товары
-        await this.loadSimilarProducts()
-        
       } catch (err: any) {
         this.error = err.message || 'Ошибка загрузки товара'
         console.error('Ошибка загрузки товара:', err)
       } finally {
         this.loading = false
-      }
-    },
-    
-    async loadSimilarProducts() {
-      try {
-        // Получаем товары той же категории (исключая текущий)
-        const response = await fetch(`/api/products/category/${this.product?.category_id}?limit=8&exclude=${this.productId}`)
-        if (response.ok) {
-          const data = await response.json()
-          this.similarProducts = data.data?.products || []
-        }
-      } catch (err) {
-        console.error('Ошибка загрузки похожих товаров:', err)
-        // Создаем тестовые данные
-        this.similarProducts = this.createMockSimilarProducts()
-      }
-    },
-    
-    createMockSimilarProducts(): Product[] {
-      const mockProducts: Product[] = []
-      
-      for (let i = 1; i <= 8; i++) {
-        mockProducts.push({
-          product_id: 1000 + i,
-          category_id: this.product?.category_id || 1,
-          shop_id: 1,
-          name: `Похожий товар ${i}`,
-          description: 'Тестовый товар из той же категории',
-          photos: ['/placeholder.png'],
-          price: (Math.random() * 5000 + 1000).toFixed(2),
-          created_at: new Date().toISOString(),
-          category_name: this.product?.category_name || 'Тестовая категория',
-          shop_name: 'Тестовый магазин'
-        })
-      }
-      
-      return mockProducts
-    },
-    
-    async addToCart() {
-      if (!this.product) return
-      
-      try {
-        // Проверяем авторизацию
-        const token = localStorage.getItem('token')
-        if (!token) {
-          this.$q.notify({
-            message: 'Для добавления в корзину нужно авторизоваться',
-            color: 'warning',
-            icon: 'warning'
-          })
-          return
-        }
-        
-        // Отправляем запрос
-        const response = await fetch(`/api/cart/update/${this.product.product_id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ quantity: 1 })
-        })
-        
-        if (response.ok) {
-          this.$q.notify({
-            message: 'Товар добавлен в корзину',
-            color: 'positive',
-            icon: 'shopping_cart'
-          })
-        } else {
-          throw new Error('Ошибка сервера')
-        }
-        
-      } catch (error) {
-        console.error('Ошибка добавления в корзину:', error)
-        this.$q.notify({
-          message: 'Не удалось добавить товар в корзину',
-          color: 'negative',
-          icon: 'error'
-        })
       }
     },
     
