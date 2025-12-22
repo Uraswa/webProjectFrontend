@@ -169,6 +169,14 @@
                     class="full-width"
                   />
                   <q-btn
+                    label="Отменить заказ"
+                    v-if="orderData.current_status !== 'Завершен' && orderData.current_status !== 'Отменен'"
+                    color="red"
+                    flat
+                    @click="cancelOrder"
+                    class="full-width"
+                  />
+                  <q-btn
                     label="Связаться с поддержкой"
                     color="grey"
                     flat
@@ -231,6 +239,9 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    async cancelOrder(){
+
     },
     formatDate(dateString) {
       if (!dateString) return ''

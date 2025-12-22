@@ -2,7 +2,7 @@
   <router-view />
 </template>
 
-<script setup lang="ts">
+<script>
 import { useCartStore } from './shared/store/cartStore';
 import { defineComponent } from 'vue';
 import { jwtDecode } from 'jwt-decode';

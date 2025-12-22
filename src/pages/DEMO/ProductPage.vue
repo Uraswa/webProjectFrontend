@@ -19,9 +19,9 @@
       <!-- Хлебные крошки -->
       <q-breadcrumbs class="q-mb-xl">
         <q-breadcrumbs-el label="Главная" icon="home" to="/"/>
-        <q-breadcrumbs-el 
+        <q-breadcrumbs-el
           v-if="product.category_name"
-          :label="product.category_name" 
+          :label="product.category_name"
           :to="`/category/${product.category_id}`"
         />
         <q-breadcrumbs-el :label="product.name"/>
@@ -36,16 +36,15 @@
 
         <!-- Правая колонка - информация -->
         <div class="col-md-5 col-12">
-          <ProductInfoPanel 
+          <ProductInfoPanel
             :product="product"
             :rating="rating"
-            @buy-now="buyNow"
           />
         </div>
       </div>
 
       <!-- Характеристики -->
-      <ProductCharacteristics 
+      <ProductCharacteristics
         v-if="parsedCharacteristics && Object.keys(parsedCharacteristics).length > 0"
         :characteristics="parsedCharacteristics"
         class="q-mt-xl"
@@ -89,14 +88,14 @@ import type { ProductReview, ProductRating } from 'src/features/productDetails/a
 
 export default defineComponent({
   name: 'ProductPage',
-  
+
   components: {
     ProductGallery,
     ProductInfoPanel,
     ProductCharacteristics,
     ProductReviewsWidget
   },
-  
+
   data() {
     return {
       product: null as Product | null,
@@ -107,14 +106,14 @@ export default defineComponent({
       productId: 0
     }
   },
-  
+
   computed: {
     parsedPhotos(): string[] {
       if (!this.product?.photos) return []
-      
+
       const photos = this.product.photos
       if (Array.isArray(photos)) return photos
-      
+
       if (typeof photos === 'string') {
         try {
           let cleanStr = photos.trim()
@@ -127,19 +126,19 @@ export default defineComponent({
           return []
         }
       }
-      
+
       return []
     },
-    
+
     parsedCharacteristics(): Record<string, any> {
       if (!this.product?.characteristics) return {}
-      
+
       const chars = this.product.characteristics
-      
+
       if (typeof chars === 'object' && chars !== null) {
         return chars
       }
-      
+
       if (typeof chars === 'string') {
         try {
           let cleanStr = chars.trim()
@@ -157,46 +156,40 @@ export default defineComponent({
           return {}
         }
       }
-      
+
       return {}
     }
   },
-  
+
   mounted() {
     this.loadProduct()
   },
-  
+
   methods: {
     async loadProduct() {
       try {
         this.loading = true
         this.error = null
-        
+
         const route = useRoute()
         this.productId = Number(route.params.id)
-        
+
         if (!this.productId || isNaN(this.productId)) {
           throw new Error('Неверный ID товара')
         }
-        
+
         // Загружаем данные товара
         const response = await productDetailsApi.getProductDetails(this.productId)
         this.product = response.product
         this.feedback = response.feedback
         this.rating = response.rating
-        
+
       } catch (err: any) {
         this.error = err.message || 'Ошибка загрузки товара'
         console.error('Ошибка загрузки товара:', err)
       } finally {
         this.loading = false
       }
-    },
-    
-    buyNow() {
-      if (!this.product) return
-      console.log('Купить в 1 клик:', this.product.product_id)
-      // TODO: Реализовать быструю покупку
     }
   }
 })

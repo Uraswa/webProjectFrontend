@@ -12,8 +12,8 @@ export const cartApi = {
     return response.data.data;
   },
 
-  async updateCartItem(productId: number, quantity: number): Promise<Cart> {
-    const response = await Api.put(`/api/cart/update/${productId}`, { quantity });
+  async updateCartItem(productId: number, quantity: number, add : boolean = false): Promise<Cart> {
+    const response = await Api.put(`/api/cart/update/${productId}`, { quantity, add });
     return response.data.data;
   },
 

@@ -3,10 +3,10 @@ const routes = [
     path: '/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'home', 
-        component: () => import('pages/IndexPage.vue') 
+      {
+        path: '',
+        name: 'home',
+        component: () => import('pages/IndexPage.vue')
       }
     ]
   },
@@ -14,10 +14,10 @@ const routes = [
     path: '/product/:id',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'product', 
-        component: () => import('pages/DEMO/ProductPage.vue') 
+      {
+        path: '',
+        name: 'product',
+        component: () => import('pages/DEMO/ProductPage.vue')
       }
     ]
   },
@@ -25,10 +25,10 @@ const routes = [
     path: '/search/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'search', 
-        component: () => import('pages/DEMO/ProductFilterPage.vue') 
+      {
+        path: '',
+        name: 'search',
+        component: () => import('pages/DEMO/ProductFilterPage.vue')
       }
     ]
   },
@@ -36,10 +36,10 @@ const routes = [
     path: '/cart/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'cart', 
-        component: () => import('pages/CartPage/index.vue') 
+      {
+        path: '',
+        name: 'cart',
+        component: () => import('pages/CartPage/index.vue')
       }
     ]
   },
@@ -47,10 +47,10 @@ const routes = [
     path: '/checkout/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'checkout', 
-        component: () => import('pages/CheckoutPage/index.vue') 
+      {
+        path: '',
+        name: 'checkout',
+        component: () => import('pages/CheckoutPage/CheckoutPage.vue')
       }
     ]
   },
@@ -58,10 +58,10 @@ const routes = [
     path: '/orderMade/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'order-made', 
-        component: () => import('pages/DEMO/OrderDonePage.vue') 
+      {
+        path: '',
+        name: 'order-made',
+        component: () => import('pages/DEMO/OrderDonePage.vue')
       }
     ]
   },
@@ -69,10 +69,10 @@ const routes = [
     path: '/orders/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'orders', 
-        component: () => import('pages/DEMO/OrdersPage.vue') 
+      {
+        path: '',
+        name: 'orders',
+        component: () => import('pages/DEMO/OrdersPage.vue')
       }
     ]
   },
@@ -92,10 +92,10 @@ const routes = [
     path: '/login',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'login', 
-        component: () => import('pages/Auth/LoginPage.vue') 
+      {
+        path: '',
+        name: 'login',
+        component: () => import('pages/Auth/LoginPage.vue')
       }
     ]
   },
@@ -103,10 +103,10 @@ const routes = [
     path: '/registration',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'registration', 
-        component: () => import('pages/Auth/RegistrationPage.vue') 
+      {
+        path: '',
+        name: 'registration',
+        component: () => import('pages/Auth/RegistrationPage.vue')
       }
     ]
   },
@@ -114,22 +114,22 @@ const routes = [
     path: '/forgotPassword',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'forgot-password', 
-        component: () => import('pages/Auth/ForgotPasswordPage.vue') 
+      {
+        path: '',
+        name: 'forgot-password',
+        component: () => import('pages/Auth/ForgotPasswordPage.vue')
       }
     ]
   },
   {
-    path: '/changePassword/:link', 
+    path: '/changePassword/:link',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'change-password', 
+      {
+        path: '',
+        name: 'change-password',
         component: () => import('pages/Auth/ChangePasswordPage.vue'),
-        props: true 
+        props: true
       }
     ]
   },
@@ -137,9 +137,9 @@ const routes = [
     path: '/activation/:link',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'activation', 
+      {
+        path: '',
+        name: 'activation',
         component: () => import('pages/Auth/AccountActivationPage.vue'),
         props: true
       }
@@ -171,10 +171,10 @@ const routes = [
     path: '/seller/products',
     component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'seller-products', 
-        component: () => import('pages/DEMO/LkSeller/ProductsList.vue') 
+      {
+        path: '',
+        name: 'seller-products',
+        component: () => import('pages/DEMO/LkSeller/ProductsList.vue')
       }
     ]
   },
@@ -182,10 +182,10 @@ const routes = [
     path: '/seller/orders',
     component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'seller-orders', 
-        component: () => import('pages/DEMO/LkSeller/OrdersList.vue') 
+      {
+        path: '',
+        name: 'seller-orders',
+        component: () => import('pages/DEMO/LkSeller/OrdersList.vue')
       }
     ]
   },
@@ -193,10 +193,10 @@ const routes = [
     path: '/catalog',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'catalog', 
-        component: () => import('pages/CatalogPage.vue') 
+      {
+        path: '',
+        name: 'catalog',
+        component: () => import('pages/CatalogPage.vue')
       }
     ]
   },
