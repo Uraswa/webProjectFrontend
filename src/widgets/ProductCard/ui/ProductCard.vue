@@ -1,18 +1,18 @@
 <template>
-  <q-card class="my-card" flat :class="{ 'card-hover': true }">
-    <div class="image-container">
-      <img :src="productImage" :alt="product.name" />
-    </div>
-
-    <q-card-section>
-      <RouterLink :to="`/product/${product.product_id}`">
-        <div class="text-h6">{{ product.name }}</div>
-      </RouterLink>
-      <div class="text-h6" style="font-weight: bold">
-        <span style="font-size: 20px" class="operText">{{ product.price }}₽</span>
+  <RouterLink :to="`/product/${product.product_id}`" class="product-card-link">
+    <q-card class="my-card" flat :class="{ 'card-hover': true }">
+      <div class="image-container">
+        <img :src="productImage" :alt="product.name" />
       </div>
-    </q-card-section>
-  </q-card>
+
+      <q-card-section>
+        <div class="text-h6">{{ product.name }}</div>
+        <div class="text-h6 price-container">
+          <span class="operText">{{ product.price }}₽</span>
+        </div>
+      </q-card-section>
+    </q-card>
+  </RouterLink>
 </template>
 
 <script lang="ts">
@@ -57,6 +57,18 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.product-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+  transition: transform 0.2s ease;
+}
+
+.product-card-link:hover {
+  transform: translateY(-2px);
+}
+
 .my-card {
   background-color: #f8f9fa;
   transition: all 0.3s ease;
@@ -65,12 +77,18 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   height: 100%;
+  cursor: pointer; /* Добавляем курсор указателя */
 }
 
 .card-hover:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   border-color: #007bff;
+}
+
+/* Убираем стандартное подчеркивание у ссылки внутри карточки */
+.product-card-link .my-card * {
+  text-decoration: none;
 }
 
 /* Контейнер для изображения */
@@ -91,19 +109,12 @@ img {
   max-height: 100%;
   width: auto;
   height: auto;
-  object-fit: contain; /* ← ВАЖНО: изображение полностью помещается в контейнер */
+  object-fit: contain;
   display: block;
   transition: transform 0.5s ease;
 }
 
-/* Альтернатива: object-fit: scale-down (автоматически выбирает между contain и none) */
-/* img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: scale-down;
-} */
-
-.card-hover:hover img {
+.product-card-link:hover img {
   transform: scale(1.05);
 }
 
@@ -111,6 +122,12 @@ img {
   background-clip: text;
   background-image: linear-gradient(225deg, rgb(241, 17, 126) 0%, rgb(241, 17, 126) 100%);
   color: transparent;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.price-container {
+  margin-top: 8px;
 }
 
 .text-h6 {
@@ -123,12 +140,7 @@ img {
   overflow: hidden;
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-a:hover {
+.product-card-link:hover .text-h6 {
   color: #007bff;
 }
 
@@ -137,5 +149,16 @@ a:hover {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Улучшаем доступность: визуальный фокус */
+.product-card-link:focus {
+  outline: none;
+}
+
+.product-card-link:focus .my-card {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+  border-color: #007bff;
 }
 </style>

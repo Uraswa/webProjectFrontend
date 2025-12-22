@@ -75,18 +75,13 @@
             />
           </div>
 
-          <!-- Сетка товаров (по 4 в ряд как в примере) -->
+          <!-- Сетка товаров -->
           <template v-else>
-            <div 
-              v-for="(row, rowIndex) in chunkedProducts" 
-              :key="rowIndex"
-              class="row"
-            >
+            <div class="row q-col-gutter-lg">
               <div
-                v-for="product in row"
+                v-for="product in products"
                 :key="product.product_id"
                 class="col-xl-3 col-lg-4 col-md-6 col-12"
-                :style="rowIndex % 2 === 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
               >
                 <ProductCard :product="product" />
               </div>
