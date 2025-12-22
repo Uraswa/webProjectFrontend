@@ -7,10 +7,10 @@
     </div>
 
     <div class="col-2" style="display: flex; justify-content: space-around">
-      <q-btn 
-        icon="menu" 
-        label="Каталог" 
-        :to="{ name: 'catalog' }" 
+      <q-btn
+        icon="menu"
+        label="Каталог"
+        :to="{ name: 'catalog' }"
       />
     </div>
 
@@ -20,8 +20,8 @@
     </div>
 
     <div class="col-3" style="display:flex; justify-content: center;">
-      <q-btn round flat icon="shopping_basket" to="/cart/" />
-      <q-btn round flat icon="account_circle" to="/orders/" />
+      <q-btn round flat icon="shopping_basket" @click="handleCartClick" />
+      <q-btn round flat icon="account_circle" @click="handleAccountClick" />
     </div>
   </div>
 </template>
@@ -33,6 +33,26 @@ export default {
   name: 'Header',
   components: {
     ProductSearchInput
+  },
+  methods: {
+    handleAccountClick() {
+      const userId = this.$store.state.user_id;
+
+      if (userId) {
+        this.$router.push('/orders/');
+      } else {
+        this.$router.push({ path: '/login', query: { redirect: '/orders/' } });
+      }
+    },
+    handleCartClick() {
+      const userId = this.$store.state.user_id;
+
+      if (userId) {
+        this.$router.push('/cart/');
+      } else {
+        this.$router.push({ path: '/login', query: { redirect: '/cart/' } });
+      }
+    }
   }
 }
 </script>

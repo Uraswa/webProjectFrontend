@@ -15,7 +15,7 @@ export default {
   methods:{
     async onSubmit(){
       this.is_loading = true;
-      let response = await Api.post("/api/users/changePassword", {
+      let response = await Api.post("/api/changePassword", {
         password_change_token: this.$route.params.link,
         password: this.password
       });
