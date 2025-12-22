@@ -46,50 +46,68 @@
 </template>
 
 <script>
-import axios from 'axios'
+import Api from "src/shared/api/Api.js"
 
 export default {
   name: 'EditShopPage',
 
-  data() {
+  data () {
     return {
       loading: false,
+      shopId: null,
       form: {
         name: '',
         description: ''
-      },
-      shopId: null
+      }
     }
   },
 
-  mounted() {
-    // получаем shopId из маршрута
+  mounted () {
     this.shopId = this.$route.params.id
     this.fetchShop()
   },
 
   methods: {
-    async fetchShop() {
+    async fetchShop () {
       try {
         this.loading = true
-        const response = await axios.get(`http://localhost:8000/shops/${this.shopId}`)
-        this.form = response.data
-      } catch (e) {
-        console.error('Ошибка при получении магазина:', e)
+
+        const { data } = await Api.get(`/shops/${this.shopId}`)
+
+        this.form.name = data.name
+        this.form.description = data.description
+
+      } catch (error) {
+        console.error('Ошибка получения магазина:', error)
+        this.$q.notify({
+          type: 'negative',
+          message: 'Не удалось загрузить магазин'
+        })
       } finally {
         this.loading = false
       }
     },
 
-    async save() {
+    async save () {
       try {
         this.loading = true
-        const response = await axios.put(`http://localhost:8000/shops/${this.shopId}`, this.form)
-        this.form = response.data
-        this.$q.notify({ type: 'positive', message: 'Магазин успешно обновлен!' })
-      } catch (e) {
-        console.error('Ошибка при сохранении магазина:', e)
-        this.$q.notify({ type: 'negative', message: 'Ошибка при сохранении' })
+
+        await Api.put(`/shops/${this.shopId}`, {
+          name: this.form.name,
+          description: this.form.description
+        })
+
+        this.$q.notify({
+          type: 'positive',
+          message: 'Магазин успешно обновлён'
+        })
+
+      } catch (error) {
+        console.error('Ошибка сохранения магазина:', error)
+        this.$q.notify({
+          type: 'negative',
+          message: 'Ошибка при сохранении'
+        })
       } finally {
         this.loading = false
       }
