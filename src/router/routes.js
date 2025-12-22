@@ -234,6 +234,17 @@ const routes = [
     ]
   },
   {
+    path: '/shop/:id/edit',
+    name: 'lk_seller_edit_shop',
+    component: () => import('layouts/LkSellerLayout.vue'),
+    children: [
+      {path: '', component: () => import('pages/DEMO/LkSeller/EditShop.vue')}
+    ]
+  },
+
+  // Always leave this as last one,
+  // but you can also remove it
+  {
     path: '/:catchAll(.*)*',
     name: 'not-found',
     component: () => import('pages/ErrorNotFound.vue')
