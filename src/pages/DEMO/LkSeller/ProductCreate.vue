@@ -61,8 +61,13 @@
             dense
             outlined
             type="number"
+            min="0"
+            step="0.01"
             :disable="loading"
-            :rules="[(v) => Number(v) > 0 || 'Введите цену']"
+            :rules="[
+              (v) => Number.isFinite(Number(v)) && Number(v) > 0 || 'Введите цену',
+              (v) => Number(v) < 100000000 || 'Слишком большая цена'
+            ]"
           />
 
           <q-input
@@ -159,12 +164,18 @@ export default {
       try {
         this.loading = true;
 
+        const priceValue = Number(this.form.price);
+        if (!Number.isFinite(priceValue) || priceValue <= 0) {
+          Notify.create({ type: "negative", message: "Некорректная цена" });
+          return;
+        }
+
         const payload = {
           shopId: this.form.shopId,
           categoryId: this.form.categoryId,
           name: this.form.name,
           description: this.form.description,
-          price: Number(this.form.price),
+          price: priceValue.toFixed(2),
           photos: JSON.stringify(this.parsePhotos(this.form.photos)),
         };
 
@@ -177,7 +188,11 @@ export default {
         this.$router.push("/seller/products");
       } catch (error) {
         console.error("Ошибка создания товара:", error);
-        Notify.create({ type: "negative", message: "Не удалось создать товар" });
+        const message =
+          error?.response?.data?.error ||
+          error?.message ||
+          "Не удалось создать товар";
+        Notify.create({ type: "negative", message });
       } finally {
         this.loading = false;
       }
@@ -185,4 +200,3 @@ export default {
   },
 };
 </script>
-
