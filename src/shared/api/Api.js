@@ -1,7 +1,7 @@
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 
-let baseUrl = "http://localhost:3000/";
+let baseUrl = "http://localhost:8000/";
 
 const $api = axios.create({
   withCredentials: true,
@@ -15,7 +15,8 @@ $api.interceptors.request.use((config) => {
   }
 
   if (config.port) {
-    config.baseURL = `http://localhost:${config.port}/`;
+    const baseOrigin = new URL(baseUrl);
+    config.baseURL = `${baseOrigin.protocol}//${baseOrigin.hostname}:${config.port}/`;
     delete config.port; // Удаляем, чтобы не мешал
   }
 
