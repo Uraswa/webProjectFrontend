@@ -65,10 +65,9 @@ export default {
       mapReady: false,
       mapLoading: false,
       mapError: "",
-      mapCentered: false,
+      resizeObserver: null,
       markers: {},
-      mapInitRetries: 0,
-      mapInitToken: 0
+      mapInitToken: 0,
     }
   },
   beforeUnmount() {
@@ -80,84 +79,79 @@ export default {
       this.getOpps();
     },
     onDialogShow() {
-      this.$nextTick(() => {
-        if (this.map?.container) {
-          this.map.container.fitToViewport();
-          this.renderMarkers();
-        } else {
-          this.initMap();
-        }
-      });
+      // Запускаем процесс инициализации
+      this.initMap();
+    },
+    onDialogBeforeHide() {
+      this.detachResizeObserver();
     },
     onDialogHide() {
       this.destroyMap();
     },
-    formatWorkTime(workTime) {
-      if (!workTime || typeof workTime !== 'object') {
-        return 'Время работы не указано';
+    attachResizeObserver() {
+      if (this.resizeObserver) return;
+      if (typeof ResizeObserver === "undefined") return;
+      const container = this.$refs.mapContainer;
+      if (!container) return;
+
+      this.resizeObserver = new ResizeObserver(() => {
+        if (!this.showPvzModal || !this.map) return;
+        // Используем requestAnimationFrame для плавности и предотвращения ошибок
+        requestAnimationFrame(() => {
+           this.refreshMapLayout();
+        });
+      });
+      this.resizeObserver.observe(container);
+    },
+    detachResizeObserver() {
+      if (this.resizeObserver) {
+        try { this.resizeObserver.disconnect(); } catch (e) {}
+        this.resizeObserver = null;
       }
+    },
+    refreshMapLayout() {
+      if (!this.map || !this.map.container) return;
+
+      const size = this.getMapContainerSize();
+      if (!size || size.width === 0 || size.height === 0) return;
+
+      try {
+        this.map.container.fitToViewport();
+      } catch (e) {}
+    },
+    formatWorkTime(workTime) {
+      if (!workTime || typeof workTime !== 'object') return 'Время работы не указано';
 
       const daysMap = {
-        mon: 'Пн',
-        tue: 'Вт',
-        wed: 'Ср',
-        thu: 'Чт',
-        fri: 'Пт',
-        sat: 'Сб',
-        sun: 'Вс'
+        mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс'
       };
-
       const entries = Object.entries(workTime);
+      if (entries.length === 0) return 'Время работы не указано';
 
-      if (entries.length === 0) {
-        return 'Время работы не указано';
-      }
-
-      // Группируем дни с одинаковым временем работы
       const timeGroups = {};
       entries.forEach(([day, time]) => {
-        if (!timeGroups[time]) {
-          timeGroups[time] = [];
-        }
+        if (!timeGroups[time]) timeGroups[time] = [];
         timeGroups[time].push(day);
       });
 
-      // Форматируем в читаемый вид
-      const formatted = Object.entries(timeGroups).map(([time, days]) => {
-        if (days.length === 7) {
-          return `Ежедневно ${time}`;
-        } else if (days.length === 1) {
-          return `${daysMap[days[0]]} ${time}`;
-        } else {
-          const dayNames = days.map(d => daysMap[d]).join(', ');
-          return `${dayNames}: ${time}`;
-        }
-      });
-
-      return formatted.join('; ');
+      return Object.entries(timeGroups).map(([time, days]) => {
+        if (days.length === 7) return `Ежедневно ${time}`;
+        if (days.length === 1) return `${daysMap[days[0]]} ${time}`;
+        const dayNames = days.map(d => daysMap[d]).join(', ');
+        return `${dayNames}: ${time}`;
+      }).join('; ');
     },
-    calculateDistanceKm(fromLatitude, fromLongitude, toLatitude, toLongitude) {
-      if (
-        !Number.isFinite(fromLatitude) ||
-        !Number.isFinite(fromLongitude) ||
-        !Number.isFinite(toLatitude) ||
-        !Number.isFinite(toLongitude)
-      ) {
-        return null;
-      }
-
-      const earthRadiusKm = 6371;
-      const toRad = (deg) => (deg * Math.PI) / 180;
-      const dLat = toRad(toLatitude - fromLatitude);
-      const dLon = toRad(toLongitude - fromLongitude);
-      const lat1 = toRad(fromLatitude);
-      const lat2 = toRad(toLatitude);
-
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return earthRadiusKm * c;
+    calculateDistanceKm(fromLat, fromLon, toLat, toLon) {
+      if (!Number.isFinite(fromLat) || !Number.isFinite(fromLon) ||
+          !Number.isFinite(toLat) || !Number.isFinite(toLon)) return null;
+      const R = 6371;
+      const dLat = (toLat - fromLat) * Math.PI / 180;
+      const dLon = (toLon - fromLon) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(fromLat * Math.PI / 180) * Math.cos(toLat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
     },
     async getOpps() {
       this.loading = true;
@@ -173,12 +167,12 @@ export default {
             : []);
 
         if (Array.isArray(opps) && opps.length > 0) {
-          const mappedOpps = opps.map((opp) => {
+          this.oppList = opps.map((opp) => {
             const latitude = Number(opp.latitude);
             const longitude = Number(opp.longitude);
-            const backendDistanceKm = Number(opp.distance);
-            const distanceKm = Number.isFinite(backendDistanceKm)
-              ? backendDistanceKm
+            const backendDistance = Number(opp.distance);
+            const distanceKm = Number.isFinite(backendDistance)
+              ? backendDistance
               : this.calculateDistanceKm(this.latitude, this.longitude, latitude, longitude);
 
             return {
@@ -189,32 +183,19 @@ export default {
               formattedWorkTime: this.formatWorkTime(opp.work_time),
               formattedDistance: Number.isFinite(distanceKm) ? `${distanceKm.toFixed(2)} км` : ''
             };
-          });
+          }).sort((a, b) => (a.distanceKm || 99999) - (b.distanceKm || 99999));
 
-          mappedOpps.sort((a, b) => {
-            const aDistance = a?.distanceKm;
-            const bDistance = b?.distanceKm;
-            const aHasDistance = Number.isFinite(aDistance);
-            const bHasDistance = Number.isFinite(bDistance);
-            if (aHasDistance && bHasDistance) return aDistance - bDistance;
-            if (aHasDistance) return -1;
-            if (bHasDistance) return 1;
-            return 0;
-          });
-
-          this.oppList = mappedOpps;
-          this.renderMarkers();
+          // Рендерим маркеры только если карта УЖЕ готова.
+          // Если нет - они отрендерятся сами в initMap.
+          if (this.mapReady && this.map) {
+             this.$nextTick(() => this.renderMarkers());
+          }
         } else {
           this.oppList = [];
-          this.$q.notify({
-            type: 'warning',
-            message: 'Не удалось загрузить список пунктов выдачи'
-          });
         }
       } catch (error) {
         console.error('Error fetching OPPs:', error);
         this.oppList = [];
-
       } finally {
         this.loading = false;
       }
@@ -226,160 +207,221 @@ export default {
     },
     selectOppFromMap(opp) {
       this.selectedOpp = opp;
-      this.$nextTick(() => {
-        this.scrollToOpp(opp?.opp_id);
-      });
+      this.$nextTick(() => this.scrollToOpp(opp?.opp_id));
     },
     scrollToOpp(oppId) {
       if (!oppId) return;
-      const refValue = this.$refs[`oppCard-${oppId}`];
-      const refTarget = Array.isArray(refValue) ? refValue[0] : refValue;
-      const element = refTarget?.$el || refTarget;
-      if (element?.scrollIntoView) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      const ref = this.$refs[`oppCard-${oppId}`];
+      const el = Array.isArray(ref) ? ref[0]?.$el : ref?.$el;
+      if (el?.scrollIntoView) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     },
     async focusOnOpp(opp) {
       if (!opp) return;
       this.selectedOpp = opp;
-      await this.initMap();
-      if (!this.mapReady || !this.map) return;
+
+      if (!this.map) await this.initMap();
+      if (!this.map) return;
 
       if (Number.isFinite(opp.latitude) && Number.isFinite(opp.longitude)) {
-        this.map.setCenter([opp.latitude, opp.longitude], 14, { duration: 300 });
+        // Убеждаемся, что карта знает свой размер перед центрированием
+        try { this.map.container.fitToViewport(); } catch(e) {}
+
+        const size = this.getMapContainerSize();
+        if (size && size.width > 0 && size.height > 0) {
+          try {
+            this.map.setCenter([opp.latitude, opp.longitude], 15, {
+                duration: 300,
+                checkZoomRange: true
+            });
+          } catch(e) { console.warn(e); }
+        }
       }
 
       const marker = this.markers?.[opp.opp_id];
-      if (marker?.balloon?.open) {
-        marker.balloon.open();
+      if (marker && marker.balloon) {
+        try { marker.balloon.open(); } catch(e) {}
       }
+      this.scrollToOpp(opp.opp_id);
+    },
+    getMapContainerSize() {
+      const container = this.$refs.mapContainer;
+      if (!container || !container.getBoundingClientRect) return null;
+      return container.getBoundingClientRect();
+    },
+    // Вспомогательная функция ожидания размеров контейнера
+    waitContainerSize() {
+      return new Promise((resolve) => {
+        const check = () => {
+           // Если диалог закрыли в процессе ожидания - прерываем
+           if (!this.showPvzModal) return;
 
-      this.$nextTick(() => {
-        this.scrollToOpp(opp.opp_id);
+           const size = this.getMapContainerSize();
+           if (size && size.width > 0 && size.height > 0) {
+             resolve(true);
+           } else {
+             // Пробуем снова через 50мс
+             setTimeout(check, 50);
+           }
+        };
+        check();
       });
     },
     async initMap() {
       if (this.map || this.mapLoading) return;
-      if (!this.$refs.mapContainer) return;
 
-      const initToken = ++this.mapInitToken;
       this.mapLoading = true;
       this.mapError = "";
-      try {
-        await loadYandexMaps();
-        if (initToken !== this.mapInitToken) return;
-        if (!this.showPvzModal) return;
-        if (!this.$refs.mapContainer) return;
 
-        this.map = new window.ymaps.Map(this.$refs.mapContainer, {
+      const currentToken = ++this.mapInitToken;
+
+      try {
+        // 1. Сначала ждем загрузку API скрипта
+        const ymaps = await loadYandexMaps();
+
+        // Если пока грузили скрипт, пользователь закрыл окно - выход
+        if (currentToken !== this.mapInitToken || !this.showPvzModal) {
+            this.mapLoading = false;
+            return;
+        }
+
+        // 2. ТЕПЕРЬ ЖДЕМ, ПОКА КОНТЕЙНЕР СТАНЕТ ВИДИМЫМ (> 0px)
+        // Это самая важная часть фикса ошибки "reading '0'"
+        await this.waitContainerSize();
+
+        // Проверяем снова, не закрыли ли окно
+        if (currentToken !== this.mapInitToken || !this.showPvzModal || !this.$refs.mapContainer) {
+            this.mapLoading = false;
+            return;
+        }
+
+        // Очищаем контейнер
+        this.$refs.mapContainer.innerHTML = '';
+
+        // 3. Создаем карту
+        this.map = new ymaps.Map(this.$refs.mapContainer, {
           center: [this.latitude, this.longitude],
-          zoom: 12,
+          zoom: 10,
+          // Убрали 'fullscreenControl' из списка контролов
           controls: ["zoomControl"]
         }, {
-          suppressMapOpenBlock: true
+          suppressMapOpenBlock: true,
+          autoFitToViewport: 'always'
         });
-        if (initToken !== this.mapInitToken) return;
+
         this.mapReady = true;
-        this.mapCentered = false;
-        this.$nextTick(() => {
-          if (this.map?.container) {
-            this.map.container.fitToViewport();
-          }
-        });
+        this.attachResizeObserver();
+
+        // 4. Сразу обновляем layout и рендерим маркеры
+        this.map.container.fitToViewport();
         this.renderMarkers();
+
       } catch (error) {
-        console.error("Yandex map init failed:", error);
+        console.error("Map Init Error:", error);
         this.mapError = "Не удалось загрузить карту.";
       } finally {
-        if (initToken === this.mapInitToken) {
+        if (currentToken === this.mapInitToken) {
           this.mapLoading = false;
         }
       }
     },
     destroyMap() {
-      this.mapInitToken += 1;
-      const map = this.map;
+      this.mapInitToken++; // Отмена всех ожидающих процессов инициализации
+      this.detachResizeObserver();
+
+      const mapInstance = this.map;
       this.map = null;
       this.mapReady = false;
       this.mapLoading = false;
-      this.mapError = "";
-      this.mapCentered = false;
+      this.markers = {};
 
-      try {
-        if (map?.geoObjects && this.markers) {
-          Object.values(this.markers).forEach((marker) => {
-            try {
-              map.geoObjects.remove(marker);
-            } catch {
-              // ignore: map/marker might be already disposed
-            }
-          });
+      if (mapInstance) {
+        // Просто уничтожаем карту без ручной чистки geoObjects,
+        // чтобы избежать ошибки "setting 'removed'"
+        try {
+          mapInstance.destroy();
+        } catch (e) {
+          // Игнорируем ошибки при уничтожении, так как карта все равно удаляется
         }
-      } finally {
-        this.markers = {};
-      }
-
-      try {
-        map?.destroy?.();
-      } catch {
-        // ignore
       }
     },
     renderMarkers() {
-      if (!this.mapReady || !this.map) return;
+      // Базовые проверки
+      if (!this.mapReady || !this.map || !window.ymaps) return;
+      if (this.oppList.length === 0) return;
 
-      Object.values(this.markers).forEach((marker) => {
-        try {
-          this.map.geoObjects.remove(marker);
-        } catch {
-          // ignore: map/marker might be already disposed
+      // Повторная защита от 0 размера (на случай ресайза окна в 0)
+      const size = this.getMapContainerSize();
+      if (!size || size.width === 0 || size.height === 0) return;
+
+      try {
+        // Важно: сообщаем карте, что размер контейнера мог измениться
+        this.map.container.fitToViewport();
+
+        // Чистим старые маркеры через removeAll (это безопасно на живой карте)
+        this.map.geoObjects.removeAll();
+        this.markers = {};
+
+        const clusterer = new window.ymaps.Clusterer({
+          preset: 'islands#invertedBlueClusterIcons',
+          groupByCoordinates: false,
+          clusterDisableClickZoom: false,
+          clusterHideIconOnBalloonOpen: false,
+          geoObjectHideIconOnBalloonOpen: false
+        });
+
+        const geoObjects = [];
+
+        this.oppList.forEach(opp => {
+          if (!Number.isFinite(opp.latitude) || !Number.isFinite(opp.longitude)) return;
+
+          const placemark = new window.ymaps.Placemark(
+            [opp.latitude, opp.longitude],
+            {
+              balloonContentHeader: opp.address,
+              balloonContentBody: opp.formattedWorkTime,
+              balloonContentFooter: opp.formattedDistance
+            },
+            { preset: "islands#blueIcon" }
+          );
+
+          placemark.events.add("click", () => this.selectOppFromMap(opp));
+          geoObjects.push(placemark);
+          this.markers[opp.opp_id] = placemark;
+        });
+
+        if (geoObjects.length > 0) {
+          clusterer.add(geoObjects);
+          this.map.geoObjects.add(clusterer);
+
+          // Позиционирование
+          if (geoObjects.length === 1) {
+            const coords = geoObjects[0].geometry.getCoordinates();
+            this.map.setCenter(coords, 14, { duration: 0 });
+          } else {
+            const bounds = clusterer.getBounds();
+            if (bounds && Array.isArray(bounds)) {
+              this.map.setBounds(bounds, {
+                checkZoomRange: true,
+                zoomMargin: 40,
+                duration: 0
+              });
+            }
+          }
         }
-      });
-      this.markers = {};
-
-      this.oppList.forEach((opp) => {
-        if (!Number.isFinite(opp.latitude) || !Number.isFinite(opp.longitude)) return;
-        const marker = new window.ymaps.Placemark(
-          [opp.latitude, opp.longitude],
-          { balloonContent: opp.address },
-          { preset: "islands#blueIcon" }
-        );
-        marker.events.add("click", () => this.selectOppFromMap(opp));
-        try {
-          this.map.geoObjects.add(marker);
-        } catch {
-          return;
-        }
-        this.markers[opp.opp_id] = marker;
-      });
-
-      if (!this.mapCentered) {
-        const points = this.oppList
-          .filter((opp) => Number.isFinite(opp.latitude) && Number.isFinite(opp.longitude))
-          .map((opp) => [opp.latitude, opp.longitude]);
-
-        if (points.length === 1) {
-          this.map.setCenter(points[0], 12, { duration: 300 });
-          this.mapCentered = true;
-        } else if (points.length > 1) {
-          const latitudes = points.map((p) => p[0]);
-          const longitudes = points.map((p) => p[1]);
-          const bounds = [
-            [Math.min(...latitudes), Math.min(...longitudes)],
-            [Math.max(...latitudes), Math.max(...longitudes)]
-          ];
-          this.map.setBounds(bounds, { checkZoomRange: true, zoomMargin: 40 });
-          this.mapCentered = true;
-        }
+      } catch (e) {
+         console.warn("Render markers warning:", e);
       }
     }
   }
 }
 </script>
 
+
 <template>
   <!-- Модалка выбора ПВЗ -->
-  <q-dialog v-model="showPvzModal" full-width full-height @show="onDialogShow" @before-hide="onDialogHide">
+  <q-dialog v-model="showPvzModal" full-width full-height @show="onDialogShow" @before-hide="onDialogBeforeHide" @hide="onDialogHide">
     <q-card>
       <q-card-section class="row items-center">
         <div class="text-h6">Выбор пункта выдачи заказов</div>
