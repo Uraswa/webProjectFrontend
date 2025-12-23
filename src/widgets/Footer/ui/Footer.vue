@@ -11,19 +11,19 @@
 
       <div class="col-lg-3 col-md-6 col-12">
         <h6 style="margin-bottom: 10px;margin-top: 0;">Покупателям</h6>
-        
+
         <a @click="navigateToTab('faq')" class="footer-link" style="cursor: pointer;">
           Вопросы и ответы
         </a>
-        
+
         <a @click="navigateToTab('delivery')" class="footer-link" style="cursor: pointer;">
           Заказы и доставка
         </a>
-        
+
         <a @click="navigateToTab('returns')" class="footer-link" style="cursor: pointer;">
           Возврат товаров
         </a>
-        
+
         <a @click="navigateToTab('payment')" class="footer-link" style="cursor: pointer;">
           Оплата
         </a>
@@ -31,15 +31,15 @@
 
       <div class="col-lg-3 col-md-6 col-12">
         <h6 style="margin-bottom: 10px;margin-top: 0;">О нас</h6>
-        
+
         <a @click="navigateToTab('contacts')" class="footer-link" style="cursor: pointer;">
           Контакты
         </a>
-        
+
         <a @click="navigateToTab('social')" class="footer-link" style="cursor: pointer;">
           Социальные сети
         </a>
-        
+
         <a @click="navigateToTab('cooperation')" class="footer-link" style="cursor: pointer;">
           Сотрудничество
         </a>
@@ -47,54 +47,123 @@
 
       <div class="col-lg-3 col-md-6 col-12">
         <h6 style="margin-bottom: 10px;margin-top: 0;">Подписаться на новости</h6>
-        <p style="font-size: 14px; color: grey">
-          Подпишись, чтобы первым быть в курсе новых акций и скидок на нашей площадке!
-        </p>
-        <q-input label="Подписаться на новости">
+        <p style="font-size: 14px; color: grey">Подпишитесь, чтобы получать новости и акции.</p>
+        <q-input
+          v-model="newsletterEmail"
+          type="email"
+          label="Подписаться на новости"
+          dense
+          outlined
+          clearable
+          :disable="newsletterLoading"
+          @keyup.enter="submitNewsletter"
+        >
           <template v-slot:after>
-            <q-btn round dense flat icon="arrow_right"/>
+            <q-btn
+              round
+              dense
+              flat
+              icon="arrow_right"
+              :loading="newsletterLoading"
+              :disable="!canSubmitNewsletter"
+              @click="submitNewsletter"
+            />
           </template>
         </q-input>
-        <q-checkbox v-model="xer">
-          <span>Соглашаюсь с 
+        <q-checkbox v-model="newsletterConsent">
+          <span>Соглашаюсь с
             <a href="http://google.com" target="_blank" style="color: black" @click.stop>
-              Политикой конфидицеальности
+              политикой конфиденциальности
             </a>
           </span>
         </q-checkbox>
+        <div v-if="newsletterError" class="text-negative text-caption q-mt-xs">
+          {{ newsletterError }}
+        </div>
+        <div v-if="newsletterSuccess" class="text-positive text-caption q-mt-xs">
+          {{ newsletterSuccess }}
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { newsletterApi } from "src/features/newsletter/api/newsletterApi.js";
+
 export default {
   name: 'Footer',
   data() {
     return {
-      xer: false
+      newsletterEmail: "",
+      newsletterConsent: false,
+      newsletterLoading: false,
+      newsletterError: "",
+      newsletterSuccess: ""
+    }
+  },
+  computed: {
+    canSubmitNewsletter() {
+      return this.newsletterConsent && this.newsletterEmail.trim().length > 0;
     }
   },
   methods: {
+    async submitNewsletter() {
+      this.newsletterError = "";
+      this.newsletterSuccess = "";
+
+      const email = this.newsletterEmail.trim();
+      if (!email) {
+        this.newsletterError = "Введите почту в поле для подписки.";
+        return;
+      }
+      if (!this.newsletterConsent) {
+        this.newsletterError = "Подтвердите согласие с политикой.";
+        return;
+      }
+      if (!this.isValidEmail(email)) {
+        this.newsletterError = "Указана неправильная почта.";
+        return;
+      }
+
+      this.newsletterLoading = true;
+      try {
+        const response = await newsletterApi.subscribe(email);
+        if (response?.data?.success) {
+          this.newsletterSuccess = "Теперь Вы подписаны на наши новости.";
+          this.newsletterEmail = "";
+          this.newsletterConsent = false;
+        } else {
+          this.newsletterError = response?.data?.error || "Не удалось подписаться.";
+        }
+      } catch (error) {
+        this.newsletterError = error?.response?.data?.error || error?.message || "Не удалось подписаться.";
+      } finally {
+        this.newsletterLoading = false;
+      }
+    },
+    isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    },
     navigateToTab(tabId) {
       // Если уже на странице info
       if (this.$route.name === 'info') {
         // Устанавливаем hash в URL
         window.location.hash = tabId
-        
+
         // Ждем небольшое время для обновления URL, затем прокручиваем
         setTimeout(() => {
           this.scrollToElement(tabId)
         }, 50)
       } else {
         // Если на другой странице, переходим на info с hash
-        this.$router.push({ 
-          name: 'info', 
+        this.$router.push({
+          name: 'info',
           hash: `#${tabId}`
         })
       }
     },
-    
+
     scrollToElement(elementId) {
       const element = document.getElementById(elementId)
       if (element) {
@@ -117,7 +186,7 @@ export default {
 
 .footer-link {
   display: block;
-  font-size: 14px; 
+  font-size: 14px;
   color: grey;
   margin-bottom: 8px;
   text-decoration: none;
