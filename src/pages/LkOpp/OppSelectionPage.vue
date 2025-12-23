@@ -71,7 +71,7 @@ export default {
               <q-card-section>
                 <div class="row items-center no-wrap">
                   <div class="col">
-                    <div class="text-h6">{{ opp.name }}</div>
+                    <div class="text-h6">{{ opp.name || `ПВЗ #${opp.opp_id}` }}</div>
                   </div>
                   <div class="col-auto">
                     <q-icon name="store" size="2em" color="primary" />
