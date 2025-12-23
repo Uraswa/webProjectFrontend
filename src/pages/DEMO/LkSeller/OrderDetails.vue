@@ -1,11 +1,11 @@
 <template>
-  <div class="q-pa-lg">
+  <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-lg">
       <div>
         <div class="text-h4 text-weight-bold">Заказ #{{ id }}</div>
         <div class="text-caption text-grey-7">Детали заказа</div>
       </div>
-      <q-btn flat icon="arrow_back" label="Назад" @click="$router.back()" />
+      <q-btn flat color="primary" icon="arrow_back" label="Назад" @click="$router.back()" />
     </div>
 
     <q-card v-if="error" flat bordered class="q-mb-lg">
@@ -50,6 +50,10 @@
         :loading="loading"
         flat
         bordered
+        rows-per-page-label="Записей на странице"
+        :rows-per-page-options="[5, 10, 20, 50]"
+        :pagination-label="paginationLabel"
+        no-data-label="Товары не найдены"
       >
         <template v-slot:body-cell-subtotal="props">
           <q-td :props="props">
@@ -58,7 +62,7 @@
         </template>
       </q-table>
     </q-card>
-  </div>
+  </q-page>
 </template>
 
 <script>
@@ -93,6 +97,9 @@ export default {
     this.fetchOrderDetails();
   },
   methods: {
+    paginationLabel(firstRowIndex, endRowIndex, totalRowsNumber) {
+      return `${firstRowIndex}-${endRowIndex} из ${totalRowsNumber}`;
+    },
     async fetchOrderDetails() {
       this.loading = true;
       this.error = "";

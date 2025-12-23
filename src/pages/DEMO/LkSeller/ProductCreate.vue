@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-lg">
       <div>
         <div class="text-h4 text-weight-bold">Добавить товар</div>
@@ -9,8 +9,8 @@
     </div>
 
     <q-card flat bordered>
-      <q-card-section>
-        <q-form class="q-gutter-md" @submit.prevent="onSubmit">
+      <q-form class="q-gutter-md" @submit.prevent="onSubmit">
+        <q-card-section class="q-gutter-md">
           <div class="row q-col-gutter-md">
             <div class="col-6">
               <q-select
@@ -88,14 +88,15 @@
             autogrow
           />
 
-          <div class="row justify-end q-gutter-sm">
-            <q-btn label="Отмена" flat color="primary" to="/seller/products" :disable="loading" />
-            <q-btn label="Создать" color="primary" unelevated type="submit" :loading="loading" />
-          </div>
-        </q-form>
-      </q-card-section>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Отмена" to="/seller/products" :disable="loading" />
+          <q-btn label="Создать" color="primary" unelevated type="submit" :loading="loading" />
+        </q-card-actions>
+      </q-form>
     </q-card>
-  </div>
+  </q-page>
 </template>
 
 <script>

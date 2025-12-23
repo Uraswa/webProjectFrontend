@@ -1,25 +1,24 @@
 ﻿<template>
-
-        <!-- Шапка страницы -->
-        <div class="row items-center justify-between q-mb-lg">
-          <div>
-            <div class="text-h4 text-weight-bold">Товары</div>
-            <div class="text-caption text-grey-7">Управление товарами вашего магазина</div>
-          </div>
-          <q-btn
-            label="Добавить товар"
-            color="primary"
-            icon="add"
-            unelevated
-            to="/seller/products/add"
-          />
-        </div>
+  <q-page class="q-pa-lg">
+    <div class="row items-center justify-between q-mb-lg">
+      <div>
+        <div class="text-h4 text-weight-bold">Товары</div>
+        <div class="text-caption text-grey-7">Управление товарами вашего магазина</div>
+      </div>
+      <q-btn
+        label="Добавить товар"
+        color="primary"
+        icon="add"
+        unelevated
+        to="/seller/products/add"
+      />
+    </div>
 
         <!-- Фильтры и поиск -->
         <q-card flat bordered class="q-mb-lg">
           <q-card-section>
             <div class="row items-center q-col-gutter-md">
-              <div class="col-4">
+              <div class="col-12 col-md-4">
                 <q-input
                   v-model="searchQuery"
                   placeholder="Поиск по названию..."
@@ -32,7 +31,7 @@
                   </template>
                 </q-input>
               </div>
-              <div class="col-3">
+              <div class="col-12 col-md-3">
                 <q-select
                   v-model="categoryFilter"
                   :options="categoryOptions"
@@ -46,7 +45,7 @@
                   clearable
                 />
               </div>
-              <div class="col-3">
+              <div class="col-12 col-md-3">
                 <q-select
                   v-model="statusFilter"
                   :options="statusOptions"
@@ -60,7 +59,7 @@
                   clearable
                 />
               </div>
-              <div class="col-2">
+              <div class="col-12 col-md-2">
                 <q-btn
                   label="Применить"
                   color="primary"
@@ -82,6 +81,10 @@
             :loading="loading"
             flat
             bordered
+            rows-per-page-label="Записей на странице"
+            :rows-per-page-options="[5, 10, 20, 50]"
+            :pagination-label="paginationLabel"
+            no-data-label="Товары не найдены"
           >
             <!-- Колонка с фотографией -->
             <template v-slot:body-cell-photo="props">
@@ -115,11 +118,11 @@
             <!-- Колонка с действиями -->
             <template v-slot:body-cell-actions="props">
               <q-td :props="props">
-                <div class="row q-gutter-xs">
+                <div class="row q-gutter-xs justify-end">
                   <q-btn
                     icon="edit"
                     size="sm"
-                    color="blue"
+                    color="primary"
                     dense
                     flat
                     :to="`/seller/products/edit/${props.row.id}`"
@@ -127,7 +130,7 @@
                   <q-btn
                     icon="delete"
                     size="sm"
-                    color="red"
+                    color="negative"
                     dense
                     flat
                     @click="confirmDelete(props.row)"
@@ -155,7 +158,7 @@
             </q-card-actions>
           </q-card>
         </q-dialog>
-
+  </q-page>
 </template>
 
 <script>
@@ -256,6 +259,9 @@ export default {
     this.applyFilters();
   },
   methods: {
+    paginationLabel(firstRowIndex, endRowIndex, totalRowsNumber) {
+      return `${firstRowIndex}-${endRowIndex} из ${totalRowsNumber}`;
+    },
     applyFilters() {
       this.appliedSearchQuery = this.searchQuery;
       this.appliedCategoryId = this.categoryFilter;

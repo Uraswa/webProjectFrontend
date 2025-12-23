@@ -1,7 +1,5 @@
 ﻿<template>
-  <!-- Основная область -->
-  <div>
-    <!-- Шапка страницы -->
+  <q-page class="q-pa-lg">
     <div class="row items-center justify-between q-mb-lg">
       <div>
         <div class="text-h4 text-weight-bold">Заказы</div>
@@ -13,7 +11,7 @@
     <q-card flat bordered class="q-mb-lg">
       <q-card-section>
         <div class="row items-center q-col-gutter-md">
-          <div class="col-3">
+          <div class="col-12 col-md-3">
             <q-input
               v-model="searchQuery"
               placeholder="Поиск по номеру заказа..."
@@ -26,7 +24,7 @@
               </template>
             </q-input>
           </div>
-          <div class="col-3">
+          <div class="col-12 col-md-3">
             <q-select
               v-model="statusFilter"
               :options="statusOptions"
@@ -40,7 +38,7 @@
               clearable
             />
           </div>
-          <div class="col-3">
+          <div class="col-12 col-md-3">
             <q-select
               v-model="pvzFilter"
               :options="pvzOptions"
@@ -54,7 +52,7 @@
               clearable
             />
           </div>
-          <div class="col-3">
+          <div class="col-12 col-md-3">
             <q-btn
               label="Применить фильтры"
               color="primary"
@@ -76,6 +74,10 @@
         :loading="loading"
         flat
         bordered
+        rows-per-page-label="Записей на странице"
+        :rows-per-page-options="[5, 10, 20, 50]"
+        :pagination-label="paginationLabel"
+        no-data-label="Заказы не найдены"
       >
         <!-- Колонка с товарами -->
         <template v-slot:body-cell-products="props">
@@ -128,11 +130,11 @@
         <!-- Колонка с действиями -->
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <div class="row q-gutter-xs">
+            <div class="row q-gutter-xs justify-end">
               <q-btn
                 icon="visibility"
                 size="sm"
-                color="blue"
+                color="primary"
                 dense
                 flat
                 :to="`/seller/orders/${props.row.id}`"
@@ -142,7 +144,7 @@
         </template>
       </q-table>
     </q-card>
-  </div>
+  </q-page>
 </template>
 
 <script>
@@ -251,6 +253,9 @@ export default {
     }
   },
   methods: {
+    paginationLabel(firstRowIndex, endRowIndex, totalRowsNumber) {
+      return `${firstRowIndex}-${endRowIndex} из ${totalRowsNumber}`;
+    },
     applyFilters() {
       this.appliedSearchQuery = this.searchQuery;
       this.appliedStatus = this.statusFilter;
