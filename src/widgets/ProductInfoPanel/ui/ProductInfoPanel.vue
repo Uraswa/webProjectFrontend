@@ -52,12 +52,52 @@
         unelevated
         :disabled="product.count == 0"
       />
-      <span v-if="product.count == 0" class="text-red">Товар закончился!</span>
-      <span v-else>Осталось {{product.count}} единиц товара</span>
-      <div v-if="product.count > 0" style="display: flex">
-        <q-btn @click="addToCartCount = addToCartCount > 1 ? addToCartCount - 1 : 1">-</q-btn>
-        <q-input v-model="addToCartCount"/>
-        <q-btn @click="addToCartCount++">+</q-btn>
+      <div class="row items-center q-mb-sm">
+        <div
+          class="text-caption row items-center"
+          :class="product.count > 0 ? 'text-positive' : 'text-negative'"
+        >
+          <q-icon
+            :name="product.count > 0 ? 'check_circle' : 'cancel'"
+            size="16px"
+            class="q-mr-xs"
+          />
+          <span v-if="product.count == 0">Товар закончился!</span>
+          <span v-else>В наличии: {{ product.count }} шт.</span>
+        </div>
+      </div>
+
+      <div v-if="product.count > 0" class="row items-center qty-control">
+        <q-btn
+          round
+          dense
+          flat
+          icon="remove"
+          color="primary"
+          :disable="loading || addToCartCount <= 1"
+          @click="decreaseQty"
+        />
+        <q-input
+          v-model.number="addToCartCount"
+          type="number"
+          dense
+          outlined
+          hide-bottom-space
+          class="qty-input"
+          input-class="text-center text-weight-medium"
+          :min="1"
+          :max="product.count"
+          :disable="loading"
+        />
+        <q-btn
+          round
+          dense
+          flat
+          icon="add"
+          color="primary"
+          :disable="loading || addToCartCount >= product.count"
+          @click="increaseQty"
+        />
       </div>
 
     </div>
@@ -66,6 +106,7 @@
 
 <script>
 import {cartApi} from "src/features/cart/api/cartApi.js";
+import { Notify } from "quasar";
 
 export default {
   name: "ProductInfoPanel",
@@ -74,28 +115,102 @@ export default {
     return {
       loading: false,
       addToCartCount: 1,
-      showNotification: false
     }
   },
   methods: {
+    normalizeQty(value) {
+      const max = Number(this.product?.count ?? 0);
+      let qty = Number(value);
+
+      if (!Number.isFinite(qty)) qty = 1;
+      qty = Math.floor(qty);
+      if (qty < 1) qty = 1;
+      if (max > 0 && qty > max) qty = max;
+
+      return qty;
+    },
+    increaseQty() {
+      this.addToCartCount = this.normalizeQty(Number(this.addToCartCount) + 1);
+    },
+    decreaseQty() {
+      this.addToCartCount = this.normalizeQty(Number(this.addToCartCount) - 1);
+    },
     async addToCart() {
       this.loading = true;
 
-      await cartApi.updateCartItem(this.product.product_id, this.addToCartCount, true);
+      try {
+        const qty = this.normalizeQty(this.addToCartCount);
+        this.addToCartCount = qty;
+        await cartApi.updateCartItem(this.product.product_id, qty, true);
 
-      alert("Добавил в корзину")
+        Notify.create({
+          type: "positive",
+          message: "Добавлено в корзину",
+          caption: `${qty} шт.`,
+          icon: "check_circle",
+          position: "top-right",
+          timeout: 1500,
+        });
+      } catch (err) {
+        const backendMessage =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message;
 
-      this.showNotification = true;
-      this.loading = false;
+        console.error("Ошибка добавления в корзину:", err);
+        Notify.create({
+          type: "negative",
+          message: "Не удалось добавить в корзину",
+          caption: backendMessage ? String(backendMessage) : "Попробуйте ещё раз",
+          icon: "error",
+          position: "top-right",
+          timeout: 3000,
+        });
+      } finally {
+        this.loading = false;
+      }
     }
   },
   watch: {
-    "addToCartCount"(newValue, oldValue){
-       if (newValue >= this.product.count) {
-         this.addToCartCount = this.product.count;
-       }
+    addToCartCount(newValue) {
+      const normalized = this.normalizeQty(newValue);
+      if (Number(newValue) !== normalized) {
+        this.addToCartCount = normalized;
+      }
+    },
+    product: {
+      deep: true,
+      handler() {
+        this.addToCartCount = this.normalizeQty(this.addToCartCount);
+      }
     }
   }
 }
 </script>
+
+<style scoped>
+.qty-control {
+  gap: 10px;
+}
+
+.qty-input {
+  width: 96px;
+}
+
+.qty-input :deep(.q-field__control) {
+  border-radius: 12px;
+}
+
+/* Hide native number spinners; quantity changes via +/- buttons */
+.qty-input :deep(input[type='number']::-webkit-outer-spin-button),
+.qty-input :deep(input[type='number']::-webkit-inner-spin-button) {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-input :deep(input[type='number']) {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+</style>
 
