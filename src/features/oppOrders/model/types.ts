@@ -9,7 +9,7 @@ export interface Product {
 export interface OppOrder {
   order_id: number
   total_sum: string
-  status: 'waiting' | 'done' | 'canceled'
+  status: 'packing' | 'shipping' | 'waiting' | 'done' | 'canceled'
   created_at: string
   seller_name: string
   pickup_address: string
@@ -29,7 +29,7 @@ export interface OppOrderDetail extends OppOrder {
 }
 
 export interface OrdersParams {
-  status?: 'waiting' | 'done' | 'canceled'
+  status?: 'packing' | 'shipping' | 'waiting' | 'done' | 'canceled'
 }
 
 export interface OrdersResponse {

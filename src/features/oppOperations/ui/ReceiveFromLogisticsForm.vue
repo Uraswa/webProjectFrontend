@@ -35,7 +35,7 @@ export default {
       if (!this.logisticsOrderId) {
         this.$q.notify({
           type: 'warning',
-          message: 'Укажите ID логистического заказа'
+          message: 'Укажите номер логистического заказа'
         })
         return
       }
@@ -91,7 +91,7 @@ export default {
         <q-form @submit="submit">
           <q-input
             v-model.number="logisticsOrderId"
-            label="ID логистического заказа *"
+            label="Номер логистического заказа *"
             type="number"
             outlined
             class="q-mb-md"
