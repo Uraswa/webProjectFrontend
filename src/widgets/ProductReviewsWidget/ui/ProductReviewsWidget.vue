@@ -65,6 +65,7 @@ import ReviewFilters from './ReviewFilters.vue'
 import RatingDistribution from './RatingDistribution.vue'
 import ReviewDialog from './ReviewDialog.vue'
 import Api from "src/shared/api/Api.js";
+import { Notify } from 'quasar'
 
 interface ProductReview {
   user_id: number
@@ -112,6 +113,8 @@ export default defineComponent({
   
   data() {
     return {
+      feedback: [] as ProductReview[],
+      rating: null as ProductRating | null,
       searchText: '',
       selectedRating: null as number | null,
       visibleReviewsCount: 5,
@@ -119,10 +122,25 @@ export default defineComponent({
       reviewsToLoadPerClick: 5
     }
   },
+
+  watch: {
+    initialFeedback: {
+      immediate: true,
+      handler(feedback: ProductReview[]) {
+        this.feedback = Array.isArray(feedback) ? feedback : []
+      }
+    },
+    initialRating: {
+      immediate: true,
+      handler(rating: ProductRating | null) {
+        this.rating = rating
+      }
+    }
+  },
   
   computed: {
     computedRating(): ProductRating {
-      return this.initialRating || {
+      return this.rating || {
         average_rating: '0',
         total_reviews: '0',
         rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
@@ -132,7 +150,7 @@ export default defineComponent({
     feedbackByRating(): Record<number, ProductReview[]> {
       const groups: Record<number, ProductReview[]> = { 5: [], 4: [], 3: [], 2: [], 1: [] }
       
-      this.initialFeedback.forEach(review => {
+      this.feedback.forEach(review => {
         if (groups[review.rate]) {
           groups[review.rate].push(review)
         }
@@ -142,7 +160,7 @@ export default defineComponent({
     },
     
     ratingDistribution(): Record<number, number> {
-      const total = this.initialFeedback.length
+      const total = this.feedback.length
       if (total === 0) return { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
       
       return {
@@ -165,7 +183,7 @@ export default defineComponent({
     },
     
     filteredFeedback(): ProductReview[] {
-      return this.initialFeedback.filter(review => {
+      return this.feedback.filter(review => {
         if (this.selectedRating !== null && review.rate !== this.selectedRating) {
           return false
         }
@@ -191,6 +209,16 @@ export default defineComponent({
   },
   
   methods: {
+    async refreshReviews() {
+      const response = await Api.get(`/api/products/${this.productId}`)
+      if (!response.data?.success) return
+
+      const { feedback, rating } = response.data.data || {}
+      this.feedback = Array.isArray(feedback) ? feedback : []
+      this.rating = rating || { total_reviews: '0', average_rating: '0' }
+      this.resetReviewsView()
+    },
+
     handleSearch(text: string) {
       this.searchText = text
       this.resetReviewsView()
@@ -237,15 +265,19 @@ export default defineComponent({
           comment: reviewData.comment
         };
 
-        const response = await Api.post(`api/products/${this.productId}/feedback`, apiData);
+        const response = await Api.post(`/api/products/${this.productId}/feedback`, apiData);
+        const result = response.data;
 
-        if (response.data.success) {
-          alert('✅ Отзыв успешно отправлен!');
-          
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-          
+        if (result?.success) {
+          Notify.create({
+            type: "positive",
+            message: "Отзыв отправлен",
+            icon: "check_circle",
+            position: "top-right",
+            timeout: 1500,
+          });
+
+          await this.refreshReviews()
         } else {
           let errorMessage = 'Ошибка при отправке отзыва';
           
@@ -257,11 +289,14 @@ export default defineComponent({
             errorMessage = result.error;
           }
           
-          this.$q.notify({
-            message: errorMessage,
-            color: 'negative',
-            icon: 'error'
-          });
+          Notify.create({
+            type: "negative",
+            message: "Не удалось отправить отзыв",
+            caption: errorMessage,
+            icon: "error",
+            position: "top-right",
+            timeout: 3000,
+          })
         }
 
       } catch (error) {
@@ -281,11 +316,14 @@ export default defineComponent({
           userMessage = 'Нет соединения с сервером. Проверьте интернет-соединение.';
         }
         
-        this.$q.notify({
-          message: userMessage,
-          color: 'negative',
-          icon: 'error'
-        });
+        Notify.create({
+          type: "negative",
+          message: "Не удалось отправить отзыв",
+          caption: userMessage,
+          icon: "error",
+          position: "top-right",
+          timeout: 3000,
+        })
       }
     }
   }
