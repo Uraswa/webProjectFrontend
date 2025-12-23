@@ -219,10 +219,10 @@ export default {
       }
     },
     openOppSelector() {
-      this.resolveGeolocation()
-        .finally(() => {
-          this.$refs.oppSelector.open();
-        });
+      // Открываем модалку сразу, а геолокацию догружаем в фоне,
+      // чтобы не блокировать UI ожиданием `getCurrentPosition`.
+      this.$refs.oppSelector.open();
+      this.resolveGeolocation();
     },
     resolveGeolocation() {
       if (!navigator.geolocation) {

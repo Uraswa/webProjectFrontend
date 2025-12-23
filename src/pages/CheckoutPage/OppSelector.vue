@@ -77,12 +77,50 @@ export default {
   beforeUnmount() {
     this.destroyMap();
   },
+  watch: {
+    latitude() {
+      this.onLocationChanged();
+    },
+    longitude() {
+      this.onLocationChanged();
+    }
+  },
   methods: {
     // ... open, onDialogShow и т.д. без изменений ...
 
     open() {
       this.showPvzModal = true;
       this.getOpps();
+    },
+    onLocationChanged() {
+      if (!this.showPvzModal) return;
+      if (!Array.isArray(this.oppList) || this.oppList.length === 0) return;
+      this.recalculateDistancesAndSort();
+    },
+    recalculateDistancesAndSort() {
+      const selectedOppId = this.selectedOpp?.opp_id;
+
+      this.oppList = (this.oppList || [])
+        .map((opp) => {
+          const latitude = Number(opp.latitude);
+          const longitude = Number(opp.longitude);
+          const distanceKm = this.calculateDistanceKm(this.latitude, this.longitude, latitude, longitude);
+
+          return {
+            ...opp,
+            distanceKm: Number.isFinite(distanceKm) ? distanceKm : null,
+            formattedDistance: Number.isFinite(distanceKm) ? `${distanceKm.toFixed(2)} км` : ''
+          };
+        })
+        .sort((a, b) => (a.distanceKm || 99999) - (b.distanceKm || 99999));
+
+      if (selectedOppId != null) {
+        this.selectedOpp = this.oppList.find((opp) => Number(opp.opp_id) === Number(selectedOppId)) || this.selectedOpp;
+      }
+
+      if (this.mapReady) {
+        this.$nextTick(() => this.renderMarkers());
+      }
     },
     onDialogShow() {
       this.initMap();
