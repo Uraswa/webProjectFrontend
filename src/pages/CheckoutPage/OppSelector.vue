@@ -1,10 +1,12 @@
 <script>
 import Api from "src/shared/api/Api.js";
+import { markRaw } from 'vue'; // Можно использовать, но в Options API достаточно просто не класть в data
 
 const YANDEX_MAPS_API_KEY = "f37d617f-0b15-46c4-accb-cd4bb04f1a44";
 let yandexMapsPromise;
 
 function loadYandexMaps() {
+  // ... ваш код загрузки (без изменений) ...
   if (typeof window !== "undefined" && window.ymaps) {
     return new Promise((resolve) => {
       window.ymaps.ready(() => resolve(window.ymaps));
@@ -42,44 +44,47 @@ function loadYandexMaps() {
 export default {
   name: "OppSelector",
   props: {
-    latitude: {
-      type: Number,
-      default: 58.008757
-    },
-    longitude: {
-      type: Number,
-      default: 56.245150
-    },
-    radius: {
-      type: Number,
-      default: 999999999999999
-    }
+    latitude: { type: Number, default: 58.008757 },
+    longitude: { type: Number, default: 56.245150 },
+    radius: { type: Number, default: 999999999999999 }
   },
+
+  // 1. Инициализируем нереактивные свойства здесь
+  created() {
+    this.map = null;
+    this.clusterer = null;
+    this.markers = {};
+  },
+
   data() {
     return {
       selectedOpp: null,
       oppList: [],
       showPvzModal: false,
       loading: false,
-      map: null,
+
+      // УБРАЛИ ОТСЮДА map, clusterer, markers
+
+      // Состояния
       mapReady: false,
       mapLoading: false,
       mapError: "",
+
       resizeObserver: null,
-      markers: {},
-      mapInitToken: 0,
+      mapInitToken: 0
     }
   },
   beforeUnmount() {
     this.destroyMap();
   },
   methods: {
+    // ... open, onDialogShow и т.д. без изменений ...
+
     open() {
       this.showPvzModal = true;
       this.getOpps();
     },
     onDialogShow() {
-      // Запускаем процесс инициализации
       this.initMap();
     },
     onDialogBeforeHide() {
@@ -88,118 +93,216 @@ export default {
     onDialogHide() {
       this.destroyMap();
     },
+    async waitForContainer() {
+      const container = this.$refs.mapContainer;
+      // Добавим счетчик, чтобы не висеть вечно
+      let attempts = 0;
+      while (this.showPvzModal && container && (container.clientWidth === 0 || container.clientHeight === 0) && attempts < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+      }
+      return this.showPvzModal;
+    },
+
+    async initMap() {
+      // Если карта уже есть, не пересоздаем
+      if (this.map) return;
+
+      this.mapLoading = true;
+      this.mapError = "";
+      const currentToken = ++this.mapInitToken;
+
+      try {
+        const ymaps = await loadYandexMaps();
+        const isStillOpen = await this.waitForContainer();
+
+        if (!isStillOpen || currentToken !== this.mapInitToken || !this.$refs.mapContainer) {
+          this.mapLoading = false;
+          return;
+        }
+
+        this.$refs.mapContainer.innerHTML = '';
+
+        // Создаем карту (она запишется в this.map, но не будет реактивной)
+        this.map = new ymaps.Map(this.$refs.mapContainer, {
+          center: [this.latitude, this.longitude],
+          zoom: 10,
+          controls: ["zoomControl"]
+        }, {
+          suppressMapOpenBlock: true,
+          autoFitToViewport: 'always',
+          yandexMapDisablePoiInteractivity: true
+        });
+
+        this.map.container.fitToViewport();
+
+        this.clusterer = new ymaps.Clusterer({
+          preset: 'islands#invertedBlueClusterIcons',
+          groupByCoordinates: false,
+          clusterDisableClickZoom: false,
+          clusterHideIconOnBalloonOpen: false,
+          geoObjectHideIconOnBalloonOpen: false
+        });
+
+        this.map.geoObjects.add(this.clusterer);
+
+        // Исправление бага скролла на некоторых версиях
+        if (this.map.behaviors) {
+             this.map.behaviors.enable('scrollZoom');
+        }
+
+        this.mapReady = true; // Это свойство реактивное, шаблон обновится
+        this.attachResizeObserver();
+
+        // Рендерим маркеры, если данные уже есть
+        if (this.oppList.length > 0) {
+            this.renderMarkers();
+        }
+
+      } catch (error) {
+        console.error("Map init failed:", error);
+        this.mapError = "Ошибка карты";
+      } finally {
+        if (currentToken === this.mapInitToken) {
+          this.mapLoading = false;
+        }
+      }
+    },
+
+    destroyMap() {
+      this.mapInitToken++;
+      this.detachResizeObserver();
+
+      if (this.map) {
+        try { this.map.destroy(); } catch(e) {}
+      }
+      // Просто зануляем
+      this.map = null;
+      this.clusterer = null;
+      this.markers = {};
+      this.mapReady = false;
+    },
+
+    renderMarkers() {
+      if (!this.map || !this.clusterer || !window.ymaps) return;
+
+      // Очистка
+      this.clusterer.removeAll();
+      this.markers = {}; // Очистка объекта ссылок
+
+      if (this.oppList.length === 0) return;
+
+      const geoObjects = [];
+
+      this.oppList.forEach(opp => {
+        if (!Number.isFinite(opp.latitude) || !Number.isFinite(opp.longitude)) return;
+
+        const placemark = new window.ymaps.Placemark(
+          [opp.latitude, opp.longitude],
+          {
+            balloonContentHeader: opp.address,
+            balloonContentBody: opp.formattedWorkTime,
+            balloonContentFooter: opp.formattedDistance
+          },
+          { preset: "islands#blueIcon" }
+        );
+
+        placemark.events.add("click", () => this.selectOppFromMap(opp));
+        geoObjects.push(placemark);
+
+        // Сохраняем ссылку для открытия балуна из списка
+        this.markers[opp.opp_id] = placemark;
+      });
+
+      if (geoObjects.length > 0) {
+        // Теперь добавление должно работать корректно, так как clusterer не Proxy
+        this.clusterer.add(geoObjects);
+        this.fitMap();
+      }
+    },
+
+    fitMap() {
+      if (!this.clusterer || !this.map) return;
+
+      try {
+        // getBounds() падал из-за Proxy
+        const bounds = this.clusterer.getBounds();
+        if (bounds && bounds[0] && bounds[1]) {
+           if (this.oppList.length === 1) {
+             this.map.setCenter(bounds[0], 14);
+           } else {
+             this.map.setBounds(bounds, { checkZoomRange: true, zoomMargin: 40, duration: 300 });
+           }
+        }
+      } catch(e) {
+          console.warn('Fit map error', e);
+      }
+    },
+
+    // ... attachResizeObserver и detachResizeObserver без изменений ...
     attachResizeObserver() {
       if (this.resizeObserver) return;
-      if (typeof ResizeObserver === "undefined") return;
       const container = this.$refs.mapContainer;
-      if (!container) return;
+      if (!container || typeof ResizeObserver === 'undefined') return;
 
       this.resizeObserver = new ResizeObserver(() => {
-        if (!this.showPvzModal || !this.map) return;
-        // Используем requestAnimationFrame для плавности и предотвращения ошибок
-        requestAnimationFrame(() => {
-           this.refreshMapLayout();
-        });
+        if (this.map && this.map.container) {
+           this.map.container.fitToViewport();
+        }
       });
       this.resizeObserver.observe(container);
     },
     detachResizeObserver() {
       if (this.resizeObserver) {
-        try { this.resizeObserver.disconnect(); } catch (e) {}
+        this.resizeObserver.disconnect();
         this.resizeObserver = null;
       }
     },
-    refreshMapLayout() {
-      if (!this.map || !this.map.container) return;
 
-      const size = this.getMapContainerSize();
-      if (!size || size.width === 0 || size.height === 0) return;
+    async focusOnOpp(opp) {
+      if (!opp) return;
+      this.selectedOpp = opp;
 
-      try {
-        this.map.container.fitToViewport();
-      } catch (e) {}
-    },
-    formatWorkTime(workTime) {
-      if (!workTime || typeof workTime !== 'object') return 'Время работы не указано';
-
-      const daysMap = {
-        mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс'
-      };
-      const entries = Object.entries(workTime);
-      if (entries.length === 0) return 'Время работы не указано';
-
-      const timeGroups = {};
-      entries.forEach(([day, time]) => {
-        if (!timeGroups[time]) timeGroups[time] = [];
-        timeGroups[time].push(day);
-      });
-
-      return Object.entries(timeGroups).map(([time, days]) => {
-        if (days.length === 7) return `Ежедневно ${time}`;
-        if (days.length === 1) return `${daysMap[days[0]]} ${time}`;
-        const dayNames = days.map(d => daysMap[d]).join(', ');
-        return `${dayNames}: ${time}`;
-      }).join('; ');
-    },
-    calculateDistanceKm(fromLat, fromLon, toLat, toLon) {
-      if (!Number.isFinite(fromLat) || !Number.isFinite(fromLon) ||
-          !Number.isFinite(toLat) || !Number.isFinite(toLon)) return null;
-      const R = 6371;
-      const dLat = (toLat - fromLat) * Math.PI / 180;
-      const dLon = (toLon - fromLon) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(fromLat * Math.PI / 180) * Math.cos(toLat * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    },
-    async getOpps() {
-      this.loading = true;
-      try {
-        const response = await Api.get('/api/opp');
-        const rawData = response.data;
-        const opps = Array.isArray(rawData)
-          ? rawData
-          : (rawData?.success
-            ? (Array.isArray(rawData?.data?.opps)
-              ? rawData.data.opps
-              : (Array.isArray(rawData?.data) ? rawData.data : []))
-            : []);
-
-        if (Array.isArray(opps) && opps.length > 0) {
-          this.oppList = opps.map((opp) => {
-            const latitude = Number(opp.latitude);
-            const longitude = Number(opp.longitude);
-            const backendDistance = Number(opp.distance);
-            const distanceKm = Number.isFinite(backendDistance)
-              ? backendDistance
-              : this.calculateDistanceKm(this.latitude, this.longitude, latitude, longitude);
-
-            return {
-              ...opp,
-              latitude: Number.isFinite(latitude) ? latitude : null,
-              longitude: Number.isFinite(longitude) ? longitude : null,
-              distanceKm: Number.isFinite(distanceKm) ? distanceKm : null,
-              formattedWorkTime: this.formatWorkTime(opp.work_time),
-              formattedDistance: Number.isFinite(distanceKm) ? `${distanceKm.toFixed(2)} км` : ''
-            };
-          }).sort((a, b) => (a.distanceKm || 99999) - (b.distanceKm || 99999));
-
-          // Рендерим маркеры только если карта УЖЕ готова.
-          // Если нет - они отрендерятся сами в initMap.
-          if (this.mapReady && this.map) {
-             this.$nextTick(() => this.renderMarkers());
-          }
-        } else {
-          this.oppList = [];
-        }
-      } catch (error) {
-        console.error('Error fetching OPPs:', error);
-        this.oppList = [];
-      } finally {
-        this.loading = false;
+      // Ждем инициализацию, если карты еще нет
+      if (!this.map) {
+          await this.initMap();
+          // Небольшая задержка, чтобы карта отрисовалась
+          await new Promise(r => setTimeout(r, 100));
       }
+
+      if (!this.map) return;
+
+      if (Number.isFinite(opp.latitude) && Number.isFinite(opp.longitude)) {
+        this.map.container.fitToViewport();
+
+        try {
+            await this.map.setCenter([opp.latitude, opp.longitude], 15, {
+                duration: 300,
+                checkZoomRange: true
+            });
+
+            const marker = this.markers[opp.opp_id];
+            if (marker) {
+                // Логика для кластеризатора
+                // Если маркер внутри кластера, его нельзя просто так открыть
+                const objectState = this.clusterer.getObjectState(marker);
+
+                if (objectState.isClustered) {
+                    // Опционально: зум к кластеру, в котором лежит маркер
+                    objectState.cluster.state.set('activeObject', marker);
+                    this.clusterer.balloon.open(objectState.cluster);
+                } else {
+                    marker.balloon.open();
+                }
+            }
+        } catch(e) {
+            console.warn("Focus error:", e);
+        }
+      }
+      this.scrollToOpp(opp.opp_id);
     },
+
+    // ... остальные методы (selectOpp, getOpps и т.д.) без изменений ...
     selectOpp(opp) {
       this.selectedOpp = opp;
       this.$emit('opp_selected', opp);
@@ -217,202 +320,84 @@ export default {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     },
-    async focusOnOpp(opp) {
-      if (!opp) return;
-      this.selectedOpp = opp;
-
-      if (!this.map) await this.initMap();
-      if (!this.map) return;
-
-      if (Number.isFinite(opp.latitude) && Number.isFinite(opp.longitude)) {
-        // Убеждаемся, что карта знает свой размер перед центрированием
-        try { this.map.container.fitToViewport(); } catch(e) {}
-
-        const size = this.getMapContainerSize();
-        if (size && size.width > 0 && size.height > 0) {
-          try {
-            this.map.setCenter([opp.latitude, opp.longitude], 15, {
-                duration: 300,
-                checkZoomRange: true
-            });
-          } catch(e) { console.warn(e); }
-        }
-      }
-
-      const marker = this.markers?.[opp.opp_id];
-      if (marker && marker.balloon) {
-        try { marker.balloon.open(); } catch(e) {}
-      }
-      this.scrollToOpp(opp.opp_id);
-    },
-    getMapContainerSize() {
-      const container = this.$refs.mapContainer;
-      if (!container || !container.getBoundingClientRect) return null;
-      return container.getBoundingClientRect();
-    },
-    // Вспомогательная функция ожидания размеров контейнера
-    waitContainerSize() {
-      return new Promise((resolve) => {
-        const check = () => {
-           // Если диалог закрыли в процессе ожидания - прерываем
-           if (!this.showPvzModal) return;
-
-           const size = this.getMapContainerSize();
-           if (size && size.width > 0 && size.height > 0) {
-             resolve(true);
-           } else {
-             // Пробуем снова через 50мс
-             setTimeout(check, 50);
-           }
-        };
-        check();
-      });
-    },
-    async initMap() {
-      if (this.map || this.mapLoading) return;
-
-      this.mapLoading = true;
-      this.mapError = "";
-
-      const currentToken = ++this.mapInitToken;
-
+    async getOpps() {
+      this.loading = true;
       try {
-        // 1. Сначала ждем загрузку API скрипта
-        const ymaps = await loadYandexMaps();
+        const response = await Api.get('/api/opp');
+        // ... (ваша логика парсинга ответа) ...
+        const rawData = response.data;
+        const opps = Array.isArray(rawData)
+          ? rawData
+          : (rawData?.success
+            ? (Array.isArray(rawData?.data?.opps)
+              ? rawData.data.opps
+              : (Array.isArray(rawData?.data) ? rawData.data : []))
+            : []);
 
-        // Если пока грузили скрипт, пользователь закрыл окно - выход
-        if (currentToken !== this.mapInitToken || !this.showPvzModal) {
-            this.mapLoading = false;
-            return;
-        }
+        if (Array.isArray(opps) && opps.length > 0) {
+          this.oppList = opps.map((opp) => {
+             // ... ваш маппинг ...
+            const latitude = Number(opp.latitude);
+            const longitude = Number(opp.longitude);
+            const backendDistance = Number(opp.distance);
+            const distanceKm = Number.isFinite(backendDistance)
+              ? backendDistance
+              : this.calculateDistanceKm(this.latitude, this.longitude, latitude, longitude);
 
-        // 2. ТЕПЕРЬ ЖДЕМ, ПОКА КОНТЕЙНЕР СТАНЕТ ВИДИМЫМ (> 0px)
-        // Это самая важная часть фикса ошибки "reading '0'"
-        await this.waitContainerSize();
+            return {
+              ...opp,
+              latitude: Number.isFinite(latitude) ? latitude : null,
+              longitude: Number.isFinite(longitude) ? longitude : null,
+              distanceKm: Number.isFinite(distanceKm) ? distanceKm : null,
+              formattedWorkTime: this.formatWorkTime(opp.work_time),
+              formattedDistance: Number.isFinite(distanceKm) ? `${distanceKm.toFixed(2)} км` : ''
+            };
+          }).sort((a, b) => (a.distanceKm || 99999) - (b.distanceKm || 99999));
 
-        // Проверяем снова, не закрыли ли окно
-        if (currentToken !== this.mapInitToken || !this.showPvzModal || !this.$refs.mapContainer) {
-            this.mapLoading = false;
-            return;
-        }
-
-        // Очищаем контейнер
-        this.$refs.mapContainer.innerHTML = '';
-
-        // 3. Создаем карту
-        this.map = new ymaps.Map(this.$refs.mapContainer, {
-          center: [this.latitude, this.longitude],
-          zoom: 10,
-          // Убрали 'fullscreenControl' из списка контролов
-          controls: ["zoomControl"]
-        }, {
-          suppressMapOpenBlock: true,
-          autoFitToViewport: 'always'
-        });
-
-        this.mapReady = true;
-        this.attachResizeObserver();
-
-        // 4. Сразу обновляем layout и рендерим маркеры
-        this.map.container.fitToViewport();
-        this.renderMarkers();
-
-      } catch (error) {
-        console.error("Map Init Error:", error);
-        this.mapError = "Не удалось загрузить карту.";
-      } finally {
-        if (currentToken === this.mapInitToken) {
-          this.mapLoading = false;
-        }
-      }
-    },
-    destroyMap() {
-      this.mapInitToken++; // Отмена всех ожидающих процессов инициализации
-      this.detachResizeObserver();
-
-      const mapInstance = this.map;
-      this.map = null;
-      this.mapReady = false;
-      this.mapLoading = false;
-      this.markers = {};
-
-      if (mapInstance) {
-        // Просто уничтожаем карту без ручной чистки geoObjects,
-        // чтобы избежать ошибки "setting 'removed'"
-        try {
-          mapInstance.destroy();
-        } catch (e) {
-          // Игнорируем ошибки при уничтожении, так как карта все равно удаляется
-        }
-      }
-    },
-    renderMarkers() {
-      // Базовые проверки
-      if (!this.mapReady || !this.map || !window.ymaps) return;
-      if (this.oppList.length === 0) return;
-
-      // Повторная защита от 0 размера (на случай ресайза окна в 0)
-      const size = this.getMapContainerSize();
-      if (!size || size.width === 0 || size.height === 0) return;
-
-      try {
-        // Важно: сообщаем карте, что размер контейнера мог измениться
-        this.map.container.fitToViewport();
-
-        // Чистим старые маркеры через removeAll (это безопасно на живой карте)
-        this.map.geoObjects.removeAll();
-        this.markers = {};
-
-        const clusterer = new window.ymaps.Clusterer({
-          preset: 'islands#invertedBlueClusterIcons',
-          groupByCoordinates: false,
-          clusterDisableClickZoom: false,
-          clusterHideIconOnBalloonOpen: false,
-          geoObjectHideIconOnBalloonOpen: false
-        });
-
-        const geoObjects = [];
-
-        this.oppList.forEach(opp => {
-          if (!Number.isFinite(opp.latitude) || !Number.isFinite(opp.longitude)) return;
-
-          const placemark = new window.ymaps.Placemark(
-            [opp.latitude, opp.longitude],
-            {
-              balloonContentHeader: opp.address,
-              balloonContentBody: opp.formattedWorkTime,
-              balloonContentFooter: opp.formattedDistance
-            },
-            { preset: "islands#blueIcon" }
-          );
-
-          placemark.events.add("click", () => this.selectOppFromMap(opp));
-          geoObjects.push(placemark);
-          this.markers[opp.opp_id] = placemark;
-        });
-
-        if (geoObjects.length > 0) {
-          clusterer.add(geoObjects);
-          this.map.geoObjects.add(clusterer);
-
-          // Позиционирование
-          if (geoObjects.length === 1) {
-            const coords = geoObjects[0].geometry.getCoordinates();
-            this.map.setCenter(coords, 14, { duration: 0 });
-          } else {
-            const bounds = clusterer.getBounds();
-            if (bounds && Array.isArray(bounds)) {
-              this.map.setBounds(bounds, {
-                checkZoomRange: true,
-                zoomMargin: 40,
-                duration: 0
-              });
-            }
+          // ВАЖНО: вызываем renderMarkers только если карта уже готова
+          if (this.mapReady) {
+             this.$nextTick(() => this.renderMarkers());
           }
+        } else {
+          this.oppList = [];
         }
-      } catch (e) {
-         console.warn("Render markers warning:", e);
+      } catch (error) {
+        console.error('Error fetching OPPs:', error);
+        this.oppList = [];
+      } finally {
+        this.loading = false;
       }
+    },
+    // ... formatWorkTime, calculateDistanceKm без изменений ...
+    formatWorkTime(workTime) {
+       // ... ваш код ...
+       if (!workTime || typeof workTime !== 'object') return 'Время работы не указано';
+        const daysMap = { mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс' };
+        const entries = Object.entries(workTime);
+        if (entries.length === 0) return 'Время работы не указано';
+        const timeGroups = {};
+        entries.forEach(([day, time]) => {
+            if (!timeGroups[time]) timeGroups[time] = [];
+            timeGroups[time].push(day);
+        });
+        return Object.entries(timeGroups).map(([time, days]) => {
+            if (days.length === 7) return `Ежедневно ${time}`;
+            if (days.length === 1) return `${daysMap[days[0]]} ${time}`;
+            const dayNames = days.map(d => daysMap[d]).join(', ');
+            return `${dayNames}: ${time}`;
+        }).join('; ');
+    },
+    calculateDistanceKm(fromLat, fromLon, toLat, toLon) {
+        if (!Number.isFinite(fromLat) || !Number.isFinite(fromLon) ||
+          !Number.isFinite(toLat) || !Number.isFinite(toLon)) return null;
+        const R = 6371;
+        const dLat = (toLat - fromLat) * Math.PI / 180;
+        const dLon = (toLon - fromLon) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(fromLat * Math.PI / 180) * Math.cos(toLat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
     }
   }
 }
