@@ -148,6 +148,17 @@
           />
 
           <q-input
+            v-model.number="form.stockChange"
+            label="Добавить поставку товара"
+            dense
+            outlined
+            type="number"
+            step="1"
+            :disable="loading"
+            hint="Положительное значение добавит товар, отрицательное - уменьшит остаток"
+          />
+
+          <q-input
             v-model="form.photos"
             label="Фото (через запятую: url или имя файла)"
             dense
@@ -165,6 +176,14 @@
             autogrow
           />
 
+          <q-separator class="q-my-md" />
+
+          <ProductCharacteristicsEditor
+            :category-id="form.categoryId"
+            v-model="form.characteristics"
+            :disable="loading"
+          />
+
           <div class="row justify-end q-gutter-sm">
             <q-btn label="Отмена" flat color="primary" to="/seller/products" :disable="loading" />
             <q-btn label="Сохранить" color="primary" unelevated type="submit" :loading="loading" />
@@ -178,9 +197,13 @@
 <script>
 import Api from "src/shared/api/Api.js";
 import { Notify } from "quasar";
+import ProductCharacteristicsEditor from "./components/ProductCharacteristicsEditor.vue";
 
 export default {
   name: "SellerProductEditPage",
+  components: {
+    ProductCharacteristicsEditor,
+  },
   props: {
     id: {
       type: [String, Number],
@@ -198,10 +221,11 @@ export default {
         description: "",
         price: null,
         photos: "",
+        stockChange: 0,
+        characteristics: {},
       },
       original: {
         variantGroupId: null,
-        characteristics: {},
       },
     };
   },
@@ -304,9 +328,10 @@ export default {
         this.form.description = product.description ?? "";
         this.form.price = Number(product.price ?? 0) || null;
         this.form.photos = this.parseFirstPhotosToInput(product.photos);
+        this.form.stockChange = 0;
+        this.form.characteristics = product.characteristics ?? {};
 
         this.original.variantGroupId = product.variant_group_id ?? null;
-        this.original.characteristics = product.characteristics ?? {};
       } catch (error) {
         console.error("Ошибка загрузки товара:", error);
         const message =
@@ -334,8 +359,9 @@ export default {
           description: this.form.description,
           price: priceValue.toFixed(2),
           photos: JSON.stringify(this.parsePhotos(this.form.photos)),
-          characteristics: this.original.characteristics || {},
+          characteristics: this.form.characteristics || {},
           variantGroupId: this.original.variantGroupId,
+          stockChange: Number(this.form.stockChange) || 0,
         };
 
         const { data } = await Api.put(`/api/products/${this.id}`, payload);
