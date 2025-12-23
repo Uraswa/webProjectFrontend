@@ -1,23 +1,25 @@
 <template>
-  <q-page class="q-pa-lg">
-    <div class="row items-center justify-between q-mb-lg">
+  <q-page class="q-pa-md q-pa-sm-lg">
+    <div class="row items-center justify-between q-mb-md q-mb-lg-sm">
       <div>
-        <div class="text-h4 text-weight-bold">Магазины</div>
+        <div class="text-h4 text-h5-sm text-weight-bold">Магазины</div>
         <div class="text-caption text-grey-7">Управление магазинами и владельцами</div>
       </div>
       <q-btn
         label="Добавить магазин"
+        label-sm="Добавить"
         color="primary"
         icon="add"
         unelevated
+        class="q-mt-xs q-mt-none-sm"
         @click="openCreateDialog"
       />
     </div>
 
-    <q-card flat bordered class="q-mb-lg">
-      <q-card-section>
-        <div class="row items-center q-col-gutter-md">
-          <div class="col-12 col-md-6">
+    <q-card flat bordered class="q-mb-md q-mb-lg-sm">
+      <q-card-section class="q-pa-md">
+        <div class="row items-center q-col-gutter-sm q-col-gutter-md-sm">
+          <div class="col-12 col-sm-8 col-md-6">
             <q-input
               v-model="searchQuery"
               placeholder="Поиск по названию или владельцу"
@@ -26,15 +28,17 @@
               clearable
               debounce="400"
               @update:model-value="fetchShops"
+              class="full-width"
             >
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
             </q-input>
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-12 col-sm-4 col-md-2">
             <q-btn
               label="Обновить"
+              label-sm="Обновить"
               color="primary"
               class="full-width"
               outline
@@ -57,18 +61,20 @@
         :rows-per-page-options="[5, 10, 20, 50]"
         :pagination-label="paginationLabel"
         no-data-label="Магазины не найдены"
+        :visible-columns="visibleColumns"
+        class="admin-shops-table"
       >
         <template v-slot:body-cell-owner="props">
           <q-td :props="props">
-            <div>{{ getOwnerPrimary(props.row) }}</div>
-            <div v-if="getOwnerSecondary(props.row)" class="text-caption text-grey-7">
+            <div class="text-body2 text-body1-sm">{{ getOwnerPrimary(props.row) }}</div>
+            <div v-if="getOwnerSecondary(props.row)" class="text-caption text-caption-sm text-grey-7">
               {{ getOwnerSecondary(props.row) }}
             </div>
           </q-td>
         </template>
 
         <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
+          <q-td :props="props" class="text-right">
             <div class="row q-gutter-xs justify-end">
               <q-btn
                 icon="edit"
@@ -96,14 +102,14 @@
       {{ errorMessage }}
     </div>
 
-    <q-dialog v-model="formDialog" @hide="resetForm">
-      <q-card style="min-width: 520px">
+    <q-dialog v-model="formDialog" @hide="resetForm" :maximized="$q.screen.lt.sm">
+      <q-card :style="$q.screen.lt.sm ? 'width: 100%' : 'min-width: 520px'">
         <q-card-section>
-          <div class="text-h6">{{ isEdit ? "Редактировать магазин" : "Создать магазин" }}</div>
+          <div class="text-h6 text-h6-sm">{{ isEdit ? "Редактировать магазин" : "Создать магазин" }}</div>
         </q-card-section>
 
         <q-form @submit.prevent="submitForm">
-          <q-card-section class="q-gutter-sm">
+          <q-card-section class="q-gutter-sm q-pa-md">
             <q-input
               v-model="form.name"
               label="Название"
@@ -146,7 +152,7 @@
             </div>
           </q-card-section>
 
-          <q-card-actions align="right">
+          <q-card-actions align="right" class="q-pa-md">
             <q-btn flat label="Отмена" v-close-popup />
             <q-btn
               label="Сохранить"
@@ -159,15 +165,15 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="deleteDialog">
-      <q-card>
+    <q-dialog v-model="deleteDialog" :maximized="$q.screen.lt.sm">
+      <q-card :style="$q.screen.lt.sm ? 'width: 100%' : ''">
         <q-card-section>
-          <div class="text-h6">Удалить магазин</div>
+          <div class="text-h6 text-h6-sm">Удалить магазин</div>
         </q-card-section>
         <q-card-section>
           Удалить магазин "{{ deleteTarget?.name }}"?
         </q-card-section>
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Отмена" v-close-popup />
           <q-btn
             label="Удалить"
@@ -248,6 +254,14 @@ export default {
   computed: {
     isEdit() {
       return this.formMode === "edit";
+    },
+    visibleColumns() {
+      if (this.$q.screen.lt.sm) {
+        return ['name', 'owner', 'actions'];
+      } else if (this.$q.screen.lt.md) {
+        return ['shop_id', 'name', 'owner', 'actions'];
+      }
+      return ['shop_id', 'name', 'description', 'owner', 'actions'];
     }
   },
   mounted() {
@@ -407,3 +421,25 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+@media (max-width: 600px) {
+  .admin-shops-table :deep(.q-table__top) {
+    padding: 8px;
+  }
+  
+  .admin-shops-table :deep(.q-table__bottom) {
+    padding: 8px;
+  }
+  
+  .admin-shops-table :deep(.q-table thead tr th) {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+  
+  .admin-shops-table :deep(.q-table tbody tr td) {
+    font-size: 13px;
+    padding: 8px 4px;
+  }
+}
+</style>

@@ -1,27 +1,30 @@
 <template>
-  <div class="row items-center header">
-    <div class="col-1">
-      <RouterLink to="/">
-        <p style="margin: 0; font-size: 2em">Sellzy</p>
-      </RouterLink>
-    </div>
+  <div class="header">
+    <!-- Десктопная версия -->
+    <div class="row items-center desktop-header">
+      <div class="col-12 col-md-2">
+        <RouterLink to="/">
+          <p class="logo">Sellzy</p>
+        </RouterLink>
+      </div>
 
-    <div class="col-2" style="display: flex; justify-content: space-around">
-      <q-btn
-        icon="menu"
-        label="Каталог"
-        :to="{ name: 'catalog' }"
-      />
-    </div>
+      <div class="col-12 col-md-2">
+        <q-btn
+          icon="menu"
+          label="Каталог"
+          :to="{ name: 'catalog' }"
+          class="full-width-mobile"
+        />
+      </div>
 
-    <!-- 🔽 ПОИСК -->
-    <div class="col-6">
-      <ProductSearchInput />
-    </div>
+      <div class="col-12 col-md-5">
+        <ProductSearchInput />
+      </div>
 
-    <div class="col-3" style="display:flex; justify-content: center;">
-      <q-btn round flat icon="shopping_basket" to="/cart/" />
-      <q-btn round flat icon="account_circle" to="/orders/" />
+      <div class="col-12 col-md-3 text-right">
+        <q-btn round flat icon="shopping_basket" @click="handleCartClick" />
+        <q-btn round flat icon="account_circle" @click="handleAccountClick" />
+      </div>
     </div>
   </div>
 </template>
@@ -61,5 +64,50 @@ export default {
 .header {
   padding: 10px 0;
   background-color: white;
+}
+
+.logo {
+  margin: 0;
+  font-size: 2em;
+  line-height: 1;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .desktop-header {
+    gap: 15px;
+  }
+  
+  .logo {
+    font-size: 1.8em;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+  
+  .full-width-mobile {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Делаем элементы блочными на мобильных */
+  .desktop-header > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .text-right {
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .logo {
+    font-size: 1.6em;
+  }
+  
+  .header {
+    padding: 8px 0;
+  }
 }
 </style>

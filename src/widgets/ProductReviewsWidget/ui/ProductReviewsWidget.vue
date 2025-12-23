@@ -1,55 +1,55 @@
-<!-- widgets/ProductReviewsWidget/ui/ProductReviewsWidget.vue -->
 <template>
   <q-card flat class="q-mb-xl">
     <q-card-section>
       <div class="text-h5 text-weight-bold q-mb-md">Отзывы</div>
       
-      <div class="row q-col-gutter-xl">
-        <!-- Левая колонка - статистика -->
-        <div class="col-4">
+      <!-- Первая строка: оценка и распределение -->
+      <div class="row q-col-gutter-lg q-mb-lg">
+        <div class="col-md-6 col-12">
           <ReviewStats :rating="computedRating" />
-          
-          <!-- Кнопка написания отзыва -->
+        </div>
+        
+        <div class="col-md-6 col-12">
+          <RatingDistribution 
+            :distribution="ratingDistribution"
+            :count="distributionCount"
+          />
+        </div>
+      </div>
+      
+      <!-- Вторая строка: кнопка добавить отзыв (30% ширины) -->
+      <div class="row justify-center q-mb-lg">
+        <div class="col-12 col-md-4">
           <q-btn
             label="Написать отзыв"
             color="primary"
             icon="rate_review"
-            class="full-width q-mt-lg"
+            class="full-width"
             unelevated
             @click="openReviewDialog"
           />
-          
-          <!-- Распределение оценок -->
-          <RatingDistribution 
-            :distribution="ratingDistribution"
-            :count="distributionCount"
-            class="q-mt-lg"
-          />
         </div>
-        
-        <!-- Правая колонка - фильтры и отзывы -->
-        <div class="col-8">
-          <!-- Фильтры отзывов -->
-          <ReviewFilters
-            @search="handleSearch"
-            @rating-filter="handleRatingFilter"
-            class="q-mb-lg"
-          />
+      </div>
+      
+      <!-- Третья строка: фильтры и список отзывов -->
+      <div>
+        <ReviewFilters
+          @search="handleSearch"
+          @rating-filter="handleRatingFilter"
+          class="q-mb-lg"
+        />
 
-          <!-- Список отзывов -->
-          <ReviewList
-            :reviews="filteredFeedback"
-            :visible-reviews-count="visibleReviewsCount"
-            :show-all-reviews="showAllReviews"
-            @load-more="loadMoreReviews"
-            @collapse="collapseReviews"
-          />
-        </div>
+        <ReviewList
+          :reviews="filteredFeedback"
+          :visible-reviews-count="visibleReviewsCount"
+          :show-all-reviews="showAllReviews"
+          @load-more="loadMoreReviews"
+          @collapse="collapseReviews"
+        />
       </div>
     </q-card-section>
   </q-card>
   
-  <!-- Диалог написания отзыва -->
   <ReviewDialog
     ref="reviewDialog"
     @submit="submitReview"
@@ -166,12 +166,10 @@ export default defineComponent({
     
     filteredFeedback(): ProductReview[] {
       return this.initialFeedback.filter(review => {
-        // Фильтр по оценке
         if (this.selectedRating !== null && review.rate !== this.selectedRating) {
           return false
         }
         
-        // Поиск по тексту
         if (this.searchText) {
           const searchLower = this.searchText.toLowerCase()
           const textToSearch = [
@@ -232,19 +230,16 @@ export default defineComponent({
     
     async submitReview(reviewData) {
       try {
-        // 1. Преобразуем данные для API (rating → rate)
         const apiData = {
           rate: reviewData.rate,
           good_text: reviewData.good_text || null,
           bad_text: reviewData.bad_text || null,
           comment: reviewData.comment
         };
-      
 
         const response = await Api.post(`api/products/${this.productId}/feedback`, apiData);
 
         if (response.data.success) {
-          // 3. Показываем уведомление
           alert('✅ Отзыв успешно отправлен!');
           
           setTimeout(() => {
@@ -252,7 +247,6 @@ export default defineComponent({
           }, 1500);
           
         } else {
-          // 6. Обработка ошибок от сервера
           let errorMessage = 'Ошибка при отправке отзыва';
           
           if (result.error === 'unvalid_rate') {
@@ -273,14 +267,9 @@ export default defineComponent({
       } catch (error) {
         console.error('❌ Ошибка при отправке отзыва:', error);
         
-        // 7. Обработка ошибок сети/сервера
         let userMessage = 'Произошла ошибка при отправке отзыва. Проверьте соединение с интернетом.';
         
         if (error.response) {
-          // Ошибка от сервера (4xx, 5xx)
-          console.error('Статус ошибки:', error.response.status);
-          console.error('Данные ошибки:', error.response.data);
-          
           if (error.response.status === 401) {
             userMessage = 'Требуется авторизация. Пожалуйста, войдите в систему.';
           } else if (error.response.status === 403) {
@@ -289,8 +278,6 @@ export default defineComponent({
             userMessage = 'Страница не найдена';
           }
         } else if (error.request) {
-          // Ошибка сети (нет ответа от сервера)
-          console.error('Нет ответа от сервера');
           userMessage = 'Нет соединения с сервером. Проверьте интернет-соединение.';
         }
         

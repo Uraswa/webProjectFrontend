@@ -1,158 +1,167 @@
 <template>
-  <q-page class="info-page q-pa-xl">
-    <div class="container" style="max-width: 1000px; margin: 0 auto;">
+  <q-page class="info-page">
+    <div class="page-container">
       
       <!-- Заголовок страницы -->
-      <div class="text-center q-mb-xl">
-        <h1 class="text-h3 text-weight-bold q-mb-md">Информация</h1>
+      <div class="page-header">
+        <h1 class="page-title">Информация</h1>
       </div>
 
-      <!-- Контент секций -->
-      <div class="sections">
+      <!-- Контейнер для секций - вертикальный список -->
+      <div class="sections-list">
         
         <!-- FAQ -->
-        <section id="faq" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Вопросы и ответы</h2>
-          
-          <div class="q-gutter-y-md">
-            <div v-for="item in faqItems" :key="item.question">
-              <div class="text-weight-medium q-mb-xs">{{ item.question }}</div>
-              <p class="text-body2 text-grey-8 q-mb-sm">{{ item.answer }}</p>
+        <section id="faq" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Вопросы и ответы</h2>
+          </div>
+          <div class="section-content">
+            <div v-for="item in faqItems" :key="item.question" class="faq-item">
+              <div class="question">{{ item.question }}</div>
+              <p class="answer">{{ item.answer }}</p>
               <q-separator />
             </div>
           </div>
         </section>
 
         <!-- Доставка -->
-        <section id="delivery" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Заказы и доставка</h2>
-          
-          <div class="q-gutter-y-md">
-            <div>
-              <div class="text-weight-medium">Как сделать заказ?</div>
-              <p class="text-body2 text-grey-8">Добавьте товары в корзину, выберите ПВЗ и оформите заказ.</p>
+        <section id="delivery" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Заказы и доставка</h2>
+          </div>
+          <div class="section-content">
+            <div class="info-item">
+              <div class="info-label">Как сделать заказ?</div>
+              <p class="info-text">Добавьте товары в корзину, выберите ПВЗ и оформите заказ.</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Способы доставки</div>
-              <p class="text-body2 text-grey-8">Только самовывоз из пунктов выдачи заказов (ПВЗ).</p>
+            <div class="info-item">
+              <div class="info-label">Способы доставки</div>
+              <p class="info-text">Только самовывоз из пунктов выдачи заказов (ПВЗ).</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Стоимость доставки</div>
-              <p class="text-body2 text-grey-8">Бесплатно. Вы платите только за товар.</p>
+            <div class="info-item">
+              <div class="info-label">Стоимость доставки</div>
+              <p class="info-text">Бесплатно. Вы платите только за товар.</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Сроки доставки</div>
-              <p class="text-body2 text-grey-8">1-3 дня до выбранного ПВЗ. Статус отслеживается в личном кабинете.</p>
+            <div class="info-item">
+              <div class="info-label">Сроки доставки</div>
+              <p class="info-text">1-3 дня до выбранного ПВЗ. Статус отслеживается в личном кабинете.</p>
             </div>
           </div>
         </section>
 
         <!-- Возврат -->
-        <section id="returns" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Возврат товаров</h2>
-          
-          <div class="q-gutter-y-md">
-            <div>
-              <div class="text-weight-medium">Условия возврата</div>
-              <p class="text-body2 text-grey-8">Товар можно вернуть в течение 14 дней с момента получения, если он не был в употреблении.</p>
+        <section id="returns" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Возврат товаров</h2>
+          </div>
+          <div class="section-content">
+            <div class="info-item">
+              <div class="info-label">Условия возврата</div>
+              <p class="info-text">Товар можно вернуть в течение 14 дней с момента получения, если он не был в употреблении.</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Процесс возврата</div>
-              <p class="text-body2 text-grey-8">1. Подайте заявку в личном кабинете<br>
+            <div class="info-item">
+              <div class="info-label">Процесс возврата</div>
+              <p class="info-text">1. Подайте заявку в личном кабинете<br>
                  2. Отнесите товар в тот же ПВЗ<br>
                  3. Получите деньги при следующем посещении</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Возврат денег</div>
-              <p class="text-body2 text-grey-8">Наличными в ПВЗ при получении возврата.</p>
+            <div class="info-item">
+              <div class="info-label">Возврат денег</div>
+              <p class="info-text">Наличными в ПВЗ при получении возврата.</p>
             </div>
           </div>
         </section>
 
         <!-- Оплата -->
-        <section id="payment" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Оплата</h2>
-          
-          <div class="q-gutter-y-md">
-            <div>
-              <div class="text-weight-medium">Способы оплаты</div>
-              <p class="text-body2 text-grey-8">Наличными при получении заказа в ПВЗ.</p>
+        <section id="payment" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Оплата</h2>
+          </div>
+          <div class="section-content">
+            <div class="info-item">
+              <div class="info-label">Способы оплаты</div>
+              <p class="info-text">Наличными при получении заказа в ПВЗ.</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Когда платить?</div>
-              <p class="text-body2 text-grey-8">Только при получении товара в пункте выдачи.</p>
+            <div class="info-item">
+              <div class="info-label">Когда платить?</div>
+              <p class="info-text">Только при получении товара в пункте выдачи.</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Предоплата</div>
-              <p class="text-body2 text-grey-8">Не требуется. Оплачивайте только то, что забираете.</p>
+            <div class="info-item">
+              <div class="info-label">Предоплата</div>
+              <p class="info-text">Не требуется. Оплачивайте только то, что забираете.</p>
             </div>
           </div>
         </section>
 
         <!-- Контакты -->
-        <section id="contacts" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Контакты</h2>
-          
-          <div class="q-gutter-y-md">
-            <div>
-              <div class="text-weight-medium">Телефон</div>
-              <p class="text-body2 text-grey-8">+7 (999) 123-45-67</p>
+        <section id="contacts" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Контакты</h2>
+          </div>
+          <div class="section-content">
+            <div class="info-item">
+              <div class="info-label">Телефон</div>
+              <p class="info-text">+7 (999) 123-45-67</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Email</div>
-              <p class="text-body2 text-grey-8">info@sellzy.ru</p>
+            <div class="info-item">
+              <div class="info-label">Email</div>
+              <p class="info-text">info@sellzy.ru</p>
             </div>
             
-            <div>
-              <div class="text-weight-medium">Время работы</div>
-              <p class="text-body2 text-grey-8">Пн-Пт: 9:00-18:00</p>
+            <div class="info-item">
+              <div class="info-label">Время работы</div>
+              <p class="info-text">Пн-Пт: 9:00-18:00</p>
             </div>
           </div>
         </section>
 
         <!-- Соцсети -->
-        <section id="social" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Социальные сети</h2>
-          
-          <div class="q-gutter-md">
-            <a 
-              href="https://vk.com/sellzy!" 
-              target="_blank"
-              class="text-primary text-no-underline"
-            >
-              <q-icon name="fab fa-vk" class="q-mr-xs" />
-              ВКонтакте
-            </a>
-            
-            <br>
-            
-            <a 
-              href="https://t.me/sellzy" 
-              target="_blank"
-              class="text-primary text-no-underline"
-            >
-              <q-icon name="fab fa-telegram" class="q-mr-xs" />
-              Telegram
-            </a>
+        <section id="social" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Социальные сети</h2>
+          </div>
+          <div class="section-content">
+            <div class="social-links">
+              <a 
+                href="https://vk.com/sellzy!" 
+                target="_blank"
+                class="social-link"
+              >
+                <q-icon name="fab fa-vk" class="social-icon" />
+                ВКонтакте
+              </a>
+              
+              <a 
+                href="https://t.me/sellzy" 
+                target="_blank"
+                class="social-link"
+              >
+                <q-icon name="fab fa-telegram" class="social-icon" />
+                Telegram
+              </a>
+            </div>
           </div>
         </section>
 
         <!-- Сотрудничество -->
-        <section id="cooperation" class="section q-mb-lg">
-          <h2 class="text-h5 text-weight-bold q-mb-md">Сотрудничество</h2>
-          
-          <p class="text-body2 text-grey-8">
-            Если вы хотите стать продавцом на нашей площадке, пишите на email: 
-            <strong>partners@sellzy.ru</strong>
-          </p>
+        <section id="cooperation" class="info-section">
+          <div class="section-header">
+            <h2 class="section-title">Сотрудничество</h2>
+          </div>
+          <div class="section-content">
+            <p class="info-text">
+              Если вы хотите стать продавцом на нашей площадке, пишите на email: 
+              <strong>partners@sellzy.ru</strong>
+            </p>
+          </div>
         </section>
 
       </div>
@@ -188,10 +197,7 @@ export default {
   },
   
   mounted() {
-    // Обрабатываем hash при загрузке страницы
     this.handleHashOnLoad()
-    
-    // Добавляем обработчик hashchange
     window.addEventListener('hashchange', this.handleHashChange)
   },
   
@@ -201,11 +207,11 @@ export default {
   
   methods: {
     handleHashOnLoad() {
-      const hash = window.location.hash.substring(1) // Убираем #
+      const hash = window.location.hash.substring(1)
       if (hash) {
         setTimeout(() => {
           this.scrollToTab(hash)
-        }, 300) // Даем время на рендеринг
+        }, 300)
       }
     },
     
@@ -220,11 +226,10 @@ export default {
       this.$nextTick(() => {
         const element = document.getElementById(tabId)
         if (element) {
-          // Обновляем URL hash
           window.location.hash = tabId
           
-          // Прокручиваем к элементу с отступом для фиксированного header
-          const yOffset = -70 // Отступ для фиксированного header
+          // Адаптивный отступ в зависимости от размера экрана
+          const yOffset = window.innerWidth < 768 ? -60 : -80
           const y = element.getBoundingClientRect().top + 
                     window.pageYOffset + 
                     yOffset
@@ -241,20 +246,364 @@ export default {
 </script>
 
 <style scoped>
+/* Базовые стили для всех устройств */
 .info-page {
   background-color: #f8f9fa;
-  min-height: calc(100vh - 100px); /* Учитываем высоту футера */
+  min-height: calc(100vh - 100px);
+  padding: 16px;
 }
 
-.section {
-  padding: 24px;
+.page-container {
+  max-width: 1000px; /* Фиксированная максимальная ширина */
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 32px;
+  padding: 0;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1a237e;
+  text-align: center;
+}
+
+/* Вертикальный список секций */
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Отступ между секциями */
+}
+
+/* Карточка секции */
+.info-section {
   background: white;
-  border-radius: 8px;
-  border-left: 4px solid #1976d2;
-  scroll-margin-top: 80px; /* Отступ для якорных ссылок с учетом фиксированного header */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  scroll-margin-top: 70px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.text-no-underline {
+.info-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.section-header {
+  background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%);
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.section-content {
+  padding: 24px;
+}
+
+/* Элементы FAQ */
+.faq-item {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+}
+
+.faq-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.question {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.answer {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+/* Элементы информации */
+.info-item {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.info-text {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Социальные ссылки */
+.social-links {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  color: #1976d2;
   text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 12px 20px;
+  background-color: #f5f9ff;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.social-link:hover {
+  color: #1565c0;
+  background-color: #e3f2fd;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.social-icon {
+  margin-right: 10px;
+  font-size: 1.3rem;
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+
+/* Планшеты (768px-1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .info-page {
+    padding: 24px;
+  }
+  
+  .page-title {
+    font-size: 2.25rem;
+  }
+  
+  .sections-list {
+    gap: 28px;
+  }
+  
+  .section-header {
+    padding: 24px 28px;
+  }
+  
+  .section-title {
+    font-size: 1.6rem;
+  }
+  
+  .section-content {
+    padding: 28px;
+  }
+  
+  .question, .info-label {
+    font-size: 1.15rem;
+  }
+}
+
+/* Десктоп (≥1024px) */
+@media (min-width: 1024px) {
+  .info-page {
+    padding: 32px 40px;
+  }
+  
+  .page-title {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+  }
+  
+  .sections-list {
+    gap: 32px;
+  }
+  
+  .section-header {
+    padding: 28px 32px;
+  }
+  
+  .section-title {
+    font-size: 1.7rem;
+  }
+  
+  .section-content {
+    padding: 32px;
+  }
+  
+  .faq-item, .info-item {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+  }
+  
+  .question, .info-label {
+    font-size: 1.2rem;
+  }
+  
+  .answer, .info-text {
+    font-size: 1.05rem;
+  }
+  
+  .social-link {
+    padding: 14px 24px;
+    font-size: 1.15rem;
+  }
+  
+  .social-links {
+    gap: 32px;
+  }
+}
+
+/* Мобильные (<768px) */
+@media (max-width: 767px) {
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .sections-list {
+    gap: 20px;
+  }
+  
+  .section-header {
+    padding: 16px 20px;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+  }
+  
+  .section-content {
+    padding: 20px;
+  }
+  
+  .faq-item, .info-item {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+  }
+  
+  .question, .info-label {
+    font-size: 1rem;
+  }
+  
+  .answer, .info-text {
+    font-size: 0.95rem;
+  }
+  
+  .social-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .social-link {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Уменьшаем скролл-отступ для мобильных */
+  .info-section {
+    scroll-margin-top: 60px;
+  }
+}
+
+/* Очень маленькие экраны (<480px) */
+@media (max-width: 480px) {
+  .info-page {
+    padding: 12px;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .sections-list {
+    gap: 16px;
+  }
+  
+  .section-header {
+    padding: 14px 16px;
+  }
+  
+  .section-title {
+    font-size: 1.2rem;
+  }
+  
+  .section-content {
+    padding: 16px;
+  }
+  
+  .faq-item, .info-item {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+}
+
+/* Горизонтальные телефоны (высота < 600px) */
+@media (max-height: 600px) and (orientation: landscape) {
+  .page-title {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+  
+  .sections-list {
+    gap: 16px;
+  }
+  
+  .section-header {
+    padding: 12px 16px;
+  }
+  
+  .section-content {
+    padding: 16px;
+  }
+  
+  .faq-item, .info-item {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+/* Эффект для секций при наведении (только на устройствах с мышью) */
+@media (hover: hover) and (pointer: fine) {
+  .info-section:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+  
+  .social-link:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Отключение эффектов hover на сенсорных устройствах */
+@media (hover: none) and (pointer: coarse) {
+  .info-section {
+    transition: none;
+  }
+  
+  .social-link {
+    transition: none;
+  }
 }
 </style>
