@@ -36,7 +36,7 @@
                 label="Изменить ПВЗ"
                 color="primary"
                 outline
-                @click="$refs.oppSelector.open()"
+                @click="openOppSelector"
               />
             </div>
 
@@ -46,7 +46,7 @@
                 label="Выбрать ПВЗ"
                 color="primary"
                 outline
-                @click="$refs.oppSelector.open()"
+                @click="openOppSelector"
               />
             </div>
           </q-card-section>
@@ -147,7 +147,13 @@
         </q-card>
       </div>
     </div>
-    <OppSelector ref="oppSelector" @opp_selected="handleOppSelected"/>
+    <OppSelector
+      ref="oppSelector"
+      :latitude="geoLatitude"
+      :longitude="geoLongitude"
+      :radius="geoRadius"
+      @opp_selected="handleOppSelected"
+    />
 
   </q-page>
 </template>
@@ -168,7 +174,12 @@ export default {
       cartItems: [],
       selectedOpp: null,
       loading: false,
-      totalPrice: 0
+      totalPrice: 0,
+      geoLatitude: 58.008757,
+      geoLongitude: 56.245150,
+      geoRadius: 5,
+      geoLoading: false,
+      geoError: ""
     }
   },
   async mounted() {
@@ -206,6 +217,42 @@ export default {
         console.error('Error parsing photos:', e);
         return 'https://via.placeholder.com/80';
       }
+    },
+    openOppSelector() {
+      this.resolveGeolocation()
+        .finally(() => {
+          this.$refs.oppSelector.open();
+        });
+    },
+    resolveGeolocation() {
+      if (!navigator.geolocation) {
+        this.geoError = "Геолокация недоступна.";
+        return Promise.resolve();
+      }
+
+      this.geoLoading = true;
+      this.geoError = "";
+
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            this.geoLatitude = position.coords.latitude;
+            this.geoLongitude = position.coords.longitude;
+            resolve();
+          },
+          () => {
+            this.geoError = "Не удалось получить геолокацию.";
+            resolve();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000
+          }
+        );
+      }).finally(() => {
+        this.geoLoading = false;
+      });
     },
     async createOrder() {
       if (!this.selectedOpp || !this.selectedOpp.opp_id) {
