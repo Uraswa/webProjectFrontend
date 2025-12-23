@@ -34,9 +34,9 @@ export const popularProductsApi = {
         order_count: item.order_count || 0,
       }));
 
-      console.log('✅ Popular products parsed:', products.length, 'items');
+      console.log('Popular products parsed:', products.length, 'items');
       if (products.length > 0) {
-        console.log('📸 First product photos:', products[0].photos);
+        console.log('First product photos:', products[0].photos);
       }
 
       return products;
