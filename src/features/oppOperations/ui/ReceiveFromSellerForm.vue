@@ -49,10 +49,28 @@ export default {
         const result = await oppOperationsApi.receiveFromSeller(this.oppId, this.formData)
 
         if (result.success) {
+          const logisticsInfo = result?.data?.logistics_info
+          const logisticsOrders =
+            logisticsInfo?.logistics_orders ||
+            logisticsInfo?.logistics_info?.logistics_orders ||
+            []
+
+          if (Array.isArray(logisticsOrders) && logisticsOrders.length > 0) {
+            const ids = logisticsOrders
+              .map((o) => o?.logistics_order_id)
+              .filter(Boolean)
+              .join(', ')
+
+            this.$q.notify({
+              type: 'positive',
+              message: `Товар принят. Созданы логистические отправления: ${ids}`
+            })
+          } else {
           this.$q.notify({
             type: 'positive',
             message: 'Товар успешно принят от продавца'
           })
+          }
           this.$emit('success')
           this.show = false
           this.resetForm()
@@ -107,7 +125,7 @@ export default {
 
           <q-input
             v-model.number="formData.product_id"
-            label="ID товара *"
+            label="Номер товара *"
             type="number"
             outlined
             class="q-mb-md"
@@ -132,7 +150,7 @@ export default {
             <template v-slot:avatar>
               <q-icon name="info" />
             </template>
-            Регистрация получения товара от продавца на ПВЗ
+            Номера заказа/товара бери из страницы "Заказы" (кнопка с глазом) → список товаров в заказе.
           </q-banner>
         </q-form>
       </q-card-section>

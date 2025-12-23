@@ -174,6 +174,9 @@ export default {
                   <q-item-label caption>
                     Количество: {{ product.quantity }} шт.
                   </q-item-label>
+                  <q-item-label caption>
+                    Номер товара: {{ product.product_id }}
+                  </q-item-label>
                 </q-item-section>
 
                 <q-item-section side>

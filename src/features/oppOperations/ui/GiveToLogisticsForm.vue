@@ -110,7 +110,7 @@ export default {
 
           <q-input
             v-model.number="formData.logistics_order_id"
-            label="ID логистического заказа *"
+            label="Номер логистического заказа *"
             type="number"
             outlined
             class="q-mb-md"
@@ -120,7 +120,7 @@ export default {
 
           <q-input
             v-model.number="formData.product_id"
-            label="ID товара *"
+            label="Номер товара *"
             type="number"
             outlined
             class="q-mb-md"
@@ -145,7 +145,7 @@ export default {
             <template v-slot:avatar>
               <q-icon name="info" />
             </template>
-            Передача товара курьерской службе для доставки
+            Номер логистического отправления бери из ответа "Приём от продавца" (когда создаются отправления) или из страницы "Логистические отправления".
           </q-banner>
         </q-form>
       </q-card-section>
