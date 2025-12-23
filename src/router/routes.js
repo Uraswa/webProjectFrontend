@@ -175,6 +175,11 @@ const routes = [
         path: '',
         name: 'seller-products',
         component: () => import('pages/DEMO/LkSeller/ProductsList.vue')
+      },
+      {
+        path: 'add',
+        name: 'seller-product-add',
+        component: () => import('pages/DEMO/LkSeller/ProductCreate.vue')
       }
     ]
   },
