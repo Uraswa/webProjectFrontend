@@ -254,6 +254,16 @@ export default {
         this.geoLoading = false;
       });
     },
+    getFirstImage(photosString) {
+      try {
+        const photos = parseProductPhotos(photosString);
+        return photos && photos.length > 0 ? photos[0] : 'https://via.placeholder.com/80';
+      } catch (e) {
+        console.error('Error parsing photos:', e);
+        return 'https://via.placeholder.com/80';
+      }
+
+    },
     async createOrder() {
       if (!this.selectedOpp || !this.selectedOpp.opp_id) {
         return;
