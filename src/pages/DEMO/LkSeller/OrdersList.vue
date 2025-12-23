@@ -286,8 +286,10 @@ export default {
     async fetchOpps() {
       try {
         const { data } = await Api.get('/api/opp');
-        const oppList = data?.success ? (data.data || []) : [];
-        this.pvzOptions = oppList.map((opp) => ({
+        const payload = data?.success ? data.data : data;
+        const oppList = Array.isArray(payload) ? payload : (payload?.opps || []);
+
+        this.pvzOptions = (Array.isArray(oppList) ? oppList : []).map((opp) => ({
           label: opp.address,
           value: opp.opp_id,
         }));
