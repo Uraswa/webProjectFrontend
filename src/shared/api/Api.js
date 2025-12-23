@@ -111,12 +111,4 @@ export default class Api {
   static async delete(endPoint){
     return await $api.delete(endPoint);
   }
-
-  static async put(endPoint, data){
-    return await $api.put(endPoint, data);
-  }
-
-  static async delete(endPoint){
-    return await $api.delete(endPoint);
-  }
 }

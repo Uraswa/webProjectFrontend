@@ -199,6 +199,11 @@ const routes = [
         component: () => import('pages/DEMO/LkSeller/OrdersList.vue') 
       },
       {
+        path: '',
+        name: 'seller-orders',
+        component: () => import('pages/DEMO/LkSeller/OrdersList.vue')
+      },
+      {
         path: ':id',
         name: 'seller-order-details',
         component: () => import('pages/DEMO/LkSeller/OrderDetails.vue'),
