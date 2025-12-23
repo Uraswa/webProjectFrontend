@@ -1,6 +1,6 @@
 // shared/utils/parsePhotos.ts
 export function parseProductPhotos(photos: any): string[] {
-    console.log('🔍 [parseProductPhotos] Input:', {
+    console.log('[parseProductPhotos] Input:', {
       value: photos,
       type: typeof photos,
       isArray: Array.isArray(photos),
@@ -10,7 +10,7 @@ export function parseProductPhotos(photos: any): string[] {
     
     // Если уже массив
     if (Array.isArray(photos)) {
-      console.log('✅ [parseProductPhotos] Already array, returning:', photos);
+      console.log('[parseProductPhotos] Already array, returning:', photos);
       return photos;
     }
     
@@ -18,26 +18,26 @@ export function parseProductPhotos(photos: any): string[] {
     if (typeof photos === 'string') {
       try {
         let cleanStr = photos.trim();
-        console.log('📝 [parseProductPhotos] After trim:', cleanStr);
+        console.log('[parseProductPhotos] After trim:', cleanStr);
         
         // Убираем внешние одинарные кавычки
         if (cleanStr.startsWith("'") && cleanStr.endsWith("'")) {
           cleanStr = cleanStr.slice(1, -1);
-          console.log('✂️ [parseProductPhotos] After removing quotes:', cleanStr);
+          console.log('[parseProductPhotos] After removing quotes:', cleanStr);
         }
         
         // Парсим JSON
-        console.log('🔄 [parseProductPhotos] Attempting JSON.parse...');
+        console.log('[parseProductPhotos] Attempting JSON.parse...');
         const parsed = JSON.parse(cleanStr);
-        console.log('✅ [parseProductPhotos] Parsed successfully:', parsed);
+        console.log('[parseProductPhotos] Parsed successfully:', parsed);
         
         // Убедимся что это массив
         const result = Array.isArray(parsed) ? parsed : [];
-        console.log('🎯 [parseProductPhotos] Final result:', result);
+        console.log('[parseProductPhotos] Final result:', result);
         return result;
         
       } catch (error) {
-        console.error('❌ [parseProductPhotos] Failed to parse:', {
+        console.error('[parseProductPhotos] Failed to parse:', {
           original: photos,
           error: error.message,
           stack: error.stack
@@ -46,6 +46,6 @@ export function parseProductPhotos(photos: any): string[] {
       }
     }
     
-    console.log('⚠️ [parseProductPhotos] Unknown type, returning empty array');
+    console.log('[parseProductPhotos] Unknown type, returning empty array');
     return [];
   }
