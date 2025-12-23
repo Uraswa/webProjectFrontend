@@ -56,8 +56,9 @@
       </q-card-section>
 
       <q-card-actions class="dialog-actions">
-        <q-btn flat label="Отмена" color="grey" @click="closeDialog" class="cancel-btn" />
+        <q-btn type="button" flat label="Отмена" color="grey" @click="closeDialog" class="cancel-btn" />
         <q-btn 
+          type="button"
           label="Отправить" 
           color="primary" 
           @click="submitReview" 
