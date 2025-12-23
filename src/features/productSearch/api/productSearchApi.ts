@@ -1,29 +1,31 @@
-// frontend/src/features/productSearch/api/productSearchApi.ts
-import Api from 'src/shared/api/Api.js' // ✅ правильный импорт
-import type { ProductSearchParams, ProductSearchResponse, Pagination } from '../model/types'
+import Api from 'src/shared/api/Api.js' 
+import type { ProductSearchParams, ProductSearchResponse } from '../model/types'
+import { parseProductPhotos } from 'src/shared/utils/parsePhotos' // Импортируем из базы
 
 export const productSearchApi = {
   async searchProducts(params: ProductSearchParams): Promise<ProductSearchResponse> {
     try {
-      // формируем query-параметры с дефолтами
-      const query: Record<string, any> = {
-        order_by: params.order_by || 'created_at',
-        order_direction: params.order_direction || 'desc',
-        page: params.page || 1,
-        limit: params.limit || 20,
+      // Формируем query строку вручную
+      const queryParams = new URLSearchParams()
+      
+      // Обязательные параметры с дефолтами
+      queryParams.append('order_by', params.order_by || 'created_at')
+      queryParams.append('order_direction', params.order_direction || 'desc')
+      queryParams.append('page', String(params.page || 1))
+      queryParams.append('limit', String(params.limit || 20))
+      
+      // Опциональные параметры
+      if (params.search) queryParams.append('search', params.search)
+      if (params.category_id) queryParams.append('category_id', String(params.category_id))
+      if (params.shop_id) queryParams.append('shop_id', String(params.shop_id))
+      if (params.min_price) queryParams.append('min_price', String(params.min_price))
+      if (params.max_price) queryParams.append('max_price', String(params.max_price))
+      if (params.char_filters && params.char_filters.length > 0) {
+        queryParams.append('char_filters', JSON.stringify(params.char_filters))
       }
-
-      if (params.search) query.search = params.search // не отправляем пустой search
-      if (params.category_id) query.category_id = params.category_id
-      if (params.shop_id) query.shop_id = params.shop_id
-      if (params.min_price) query.min_price = params.min_price
-      if (params.max_price) query.max_price = params.max_price
-
-      // формируем query-строку вручную
-      const queryString = new URLSearchParams(query).toString()
-
-      // GET-запрос
-      const response = await Api.get(`/api/products/search?${queryString}`)
+      
+      const url = `/api/products/search?${queryParams.toString()}`
+      const response = await Api.get(url)
 
       if (!response.data.success) {
         console.error('Product search failed', response.data)
@@ -34,9 +36,15 @@ export const productSearchApi = {
       }
 
       const { products, pagination } = response.data.data
+      
+      // АДАПТАЦИЯ: Парсим photos в соответствии с базовым интерфейсом
+      const adaptedProducts = products.map((product: any) => ({
+        ...product,
+        photos: parseProductPhotos(product.photos) // Парсим строку в массив для совместимости
+      }))
 
       return {
-        products,
+        products: adaptedProducts, // Теперь соответствует Product из базы
         pagination
       }
     } catch (error) {

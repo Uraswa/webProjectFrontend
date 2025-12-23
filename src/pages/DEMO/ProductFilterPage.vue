@@ -1,157 +1,110 @@
 ﻿<template>
-  <q-page class="q-pa-lg">
-    <!-- Заголовок -->
-    <div class="row items-center justify-between q-mb-lg">
-      <div class="col">
-        <h4 class="q-my-none text-weight-bold">
-          {{ pageTitle }}
-        </h4>
-        <div v-if="!loading" class="text-caption text-grey-7">
-          Найдено {{ totalProducts }} товаров
-          <span v-if="searchQuery"> по запросу "{{ searchQuery }}"</span>
+  <q-page class="product-filter-page">
+    <!-- Хлебные крошки -->
+    <q-breadcrumbs class="breadcrumbs-adaptive">
+      <q-breadcrumbs-el label="Главная" to="/" />
+      <q-breadcrumbs-el 
+        v-if="selectedCategory" 
+        :label="selectedCategory.name" 
+      />
+      <q-breadcrumbs-el 
+        v-else 
+        label="Все товары" 
+      />
+    </q-breadcrumbs>
+
+    <!-- Заголовок и сортировка -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="title-section">
+          <h1 class="page-title">
+            {{ pageTitle }}
+          </h1>
+          <div v-if="!loading" class="products-count">
+            Найдено {{ totalProducts }} товаров
+            <span v-if="searchQuery"> по запросу "{{ searchQuery }}"</span>
+          </div>
         </div>
-      </div>
-      
-      <!-- Сортировка -->
-      <div class="col-auto">
-        <q-select
-          v-model="sortModel"
-          :options="sortOptions"
-          label="Сортировка"
-          dense
-          outlined
-          style="min-width: 200px"
-          emit-value
-          map-options
-        />
+        
+        <!-- Сортировка -->
+        <div class="sort-section">
+          <q-select
+            v-model="sortModel"
+            :options="sortOptions"
+            label="Сортировка"
+            dense
+            outlined
+            class="sort-select"
+            emit-value
+            map-options
+            @update:model-value="handleSortChange"
+          />
+        </div>
       </div>
     </div>
 
-    <div class="row q-col-gutter-xl">
-      <!-- Левая колонка - фильтры -->
-      <div class="col-md-3 col-12">
-        <q-card flat bordered class="q-pa-md sticky-filters">
-          <div class="text-h6 text-weight-bold q-mb-md">Фильтры</div>
-
-          <!-- Цена -->
-          <div class="q-mb-md">
-            <div class="text-weight-medium q-mb-sm">Цена, ₽</div>
-            <div class="row items-center q-col-gutter-sm">
-              <div class="col">
-                <q-input
-                  :model-value="minPrice"
-                  @update:model-value="val => updatePrice('min', val)"
-                  label="От"
-                  type="number"
-                  dense
-                  outlined
-                  min="0"
-                />
-              </div>
-              <div class="col">
-                <q-input
-                  :model-value="maxPrice"
-                  @update:model-value="val => updatePrice('max', val)"
-                  label="До"
-                  type="number"
-                  dense
-                  outlined
-                  min="0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Активные фильтры -->
-          <div v-if="hasActiveFilters" class="q-mb-lg">
-            <div class="text-caption text-grey-7 q-mb-xs">Активные фильтры:</div>
-            <div class="q-gutter-xs">
-              <q-chip
-                v-if="searchQuery"
-                removable
-                dense
-                @remove="clearSearch"
-                color="primary"
-                text-color="white"
-              >
-                Поиск: {{ searchQuery }}
-              </q-chip>
-              <q-chip
-                v-if="minPrice > 0 || maxPrice < 10000"
-                removable
-                dense
-                @remove="resetPrice"
-                color="primary"
-                text-color="white"
-              >
-                Цена: {{ priceRangeText }}
-              </q-chip>
-            </div>
-          </div>
-
-          <!-- Кнопки фильтров -->
-          <div>
-            <q-btn
-              label="Применить"
-              color="primary"
-              class="full-width q-mb-sm"
-              unelevated
-              @click="applyFilters"
+    <!-- Основной контент -->
+    <div class="page-content">
+      <div class="content-layout">
+        <!-- Фильтры - левая колонка -->
+        <div class="filters-column">
+          <div class="sticky-filters">
+            <SearchFiltersPanel
               :loading="loading"
-            />
-            <q-btn
-              label="Сбросить всё"
-              outline
-              class="full-width"
-              @click="resetAllFilters"
-              :disable="!hasActiveFilters"
+              @apply-filters="loadProducts"
+              @reset-filters="loadProducts"
+              @filter-change="handleFilterChange"
             />
           </div>
-        </q-card>
-      </div>
-
-      <!-- Правая колонка - товары -->
-      <div class="col-md-9 col-12">
-        <!-- Состояние загрузки -->
-        <div v-if="loading" class="text-center q-py-xl">
-          <q-spinner-gears color="primary" size="3em" />
-          <div class="q-mt-md text-grey-7">Загружаем товары...</div>
         </div>
 
-        <!-- Товары -->
-        <div v-else>
-          <!-- Пустое состояние -->
-          <div v-if="products.length === 0" class="text-center q-py-xl">
-            <q-icon name="search_off" size="4em" color="grey-4" class="q-mb-md" />
-            <div class="text-h6 text-weight-medium q-mb-sm">Товары не найдены</div>
-            <div class="text-grey-7 q-mb-lg">Попробуйте изменить параметры поиска</div>
-            <q-btn label="Сбросить фильтры" color="primary" outline @click="resetAllFilters" />
+        <!-- Товары - правая колонка -->
+        <div class="products-column">
+          <!-- Состояние загрузки -->
+          <div v-if="loading" class="loading-state">
+            <q-spinner-gears color="primary" size="3em" />
+            <div class="loading-text">Загружаем товары...</div>
           </div>
 
-          <!-- Сетка товаров -->
-          <div v-else class="row q-col-gutter-lg">
-            <div
-              v-for="product in products"
-              :key="product.product_id"
-              class="col-md-4 col-sm-6 col-12"
-            >
-              <ProductCard :product="product" />
+          <!-- Результаты -->
+          <div v-else class="products-container">
+            <!-- Пустое состояние -->
+            <div v-if="products.length === 0" class="empty-state">
+              <q-icon name="search_off" size="4em" color="grey-4" class="empty-icon" />
+              <div class="empty-title">Товары не найдены</div>
+              <div class="empty-subtitle">Попробуйте изменить параметры поиска</div>
+              <q-btn 
+                label="Сбросить фильтры" 
+                color="primary" 
+                outline 
+                @click="resetAllFilters" 
+                class="reset-btn"
+              />
             </div>
-          </div>
 
-          <!-- Пагинация -->
-          <div v-if="pagination.total_pages > 1" class="row justify-center q-mt-xl">
-            <q-pagination
-              v-model="currentPage"
-              :max="pagination.total_pages"
-              :max-pages="6"
-              direction-links
-              boundary-links
-              color="primary"
-              @update:model-value="handlePageChange"
-            />
-            <div class="text-caption text-grey-7 text-center full-width q-mt-sm">
-              Страница {{ currentPage }} из {{ pagination.total_pages }}
+            <!-- Сетка товаров -->
+            <div v-else class="products-grid">
+              <div
+                v-for="product in products"
+                :key="product.product_id"
+                class="product-card-wrapper"
+              >
+                <ProductCard :product="product" />
+              </div>
+            </div>
+
+            <!-- Пагинация -->
+            <div v-if="pagination.total_pages > 1" class="pagination-container">
+              <q-pagination
+                v-model="currentPage"
+                :max="pagination.total_pages"
+                :max-pages="paginationMaxPages"
+                direction-links
+                boundary-links
+                color="primary"
+                class="pagination"
+                @update:model-value="handlePageChange"
+              />
             </div>
           </div>
         </div>
@@ -160,233 +113,553 @@
   </q-page>
 </template>
 
-<script>
-import ProductCard from 'src/widgets/ProductCard/ui/ProductCard.vue'
+<script lang="ts">
+import { defineComponent, ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useSearchFilters } from 'src/features/productSearch/model/useSearchFilters'
+import { useCategories } from 'src/features/productSearch/model/useCategories'
 import { productSearchApi } from 'src/features/productSearch/api/productSearchApi'
+import ProductCard from 'src/widgets/ProductCard/ui/ProductCard.vue'
+import SearchFiltersPanel from 'src/features/productSearch/ui/SearchFiltersPanel.vue'
+import type { Product } from 'src/entities/Product/models/Product'
 
-export default {
-  name: 'ProductSearchPage',
+export default defineComponent({
+  name: 'ProductFilterPage',
   
   components: {
-    ProductCard
+    ProductCard,
+    SearchFiltersPanel
   },
-
-  data() {
-    return {
-      // 🔍 Поиск
-      searchQuery: '',
-      
-      // 💰 Цена
-      minPrice: 0,
-      maxPrice: 10000,
-      
-      // 📊 Сортировка (новый формат)
-      sortModel: 'created_at:desc',
-      sortOptions: [
-        { label: 'По новизне', value: 'created_at:desc' },
-        { label: 'По цене ↑', value: 'price:asc' },
-        { label: 'По цене ↓', value: 'price:desc' },
-        { label: 'По названию', value: 'name:asc' }
-      ],
-      
-      // 📦 Товары
-      products: [],
-      loading: false,
-      pagination: {
-        page: 1,
-        limit: 12,
-        total: 0,
-        total_pages: 1
-      },
-      currentPage: 1,
-      
-      // 📍 Текущая категория
-      currentCategory: null
-    }
-  },
-
-  computed: {
-    pageTitle() {
-      if (this.searchQuery) return `Поиск: "${this.searchQuery}"`
-      if (this.currentCategory) return this.currentCategory.name
+  
+  setup() {
+    const route = useRoute()
+    const searchFilters = useSearchFilters()
+    const categories = useCategories()
+    
+    const products = ref<Product[]>([])
+    const loading = ref(false)
+    const pagination = ref({
+      page: 1,
+      limit: 12,
+      total: 0,
+      total_pages: 1
+    })
+    const currentPage = ref(1)
+    const sortModel = ref('created_at:desc')
+    const isMobile = ref(false)
+    
+    const sortOptions = [
+      { label: 'По популярности', value: 'created_at:desc' },
+      { label: 'По цене ↑', value: 'price:asc' },
+      { label: 'По цене ↓', value: 'price:desc' },
+      { label: 'По названию', value: 'name:asc' }
+    ]
+    
+    // Адаптивная пагинация
+    const paginationMaxPages = computed(() => {
+      return isMobile.value ? 3 : 6
+    })
+    
+    const searchQuery = computed(() => searchFilters.filters.value.search)
+    
+    const selectedCategory = computed(() => {
+      if (searchFilters.filters.value.category_id) {
+        return categories.categories.value.find(
+          cat => cat.category_id === searchFilters.filters.value.category_id
+        )
+      }
+      return null
+    })
+    
+    const pageTitle = computed(() => {
+      if (searchQuery.value) return `Поиск: "${searchQuery.value}"`
+      if (selectedCategory.value) return selectedCategory.value.name
       return 'Все товары'
-    },
+    })
     
-    totalProducts() {
-      return this.pagination.total
-    },
+    const totalProducts = computed(() => pagination.value.total)
     
-    hasActiveFilters() {
-      return this.searchQuery || this.minPrice > 0 || this.maxPrice < 10000
-    },
-    
-    priceRangeText() {
-      const min = this.minPrice || 0
-      const max = this.maxPrice === 10000 ? '∞' : this.maxPrice
-      return `${min} - ${max}₽`
-    },
-    
-    // Разбиваем sortModel на order_by и order_direction
-    sortBy() {
-      return this.sortModel.split(':')[0]
-    },
-    
-    sortDirection() {
-      return this.sortModel.split(':')[1]
+    // Определение типа устройства
+    const checkMobile = () => {
+      isMobile.value = window.innerWidth < 768
     }
-  },
-
-  created() {
-    this.loadFromUrl()
-    this.loadProducts()
-  },
-
-  watch: {
-    '$route.query': {
-      handler() {
-        this.loadFromUrl()
-        this.loadProducts()
-      },
-      deep: true
-    },
     
-    // 🔥 Watch на изменение сортировки
-    sortModel() {
-      this.currentPage = 1
-      this.updateUrl()
-    }
-  },
-
-  methods: {
-    // 📍 Загрузка параметров из URL
-    loadFromUrl() {
-      const query = this.$route.query
-      
-      this.searchQuery = query.search || ''
-      this.minPrice = Number(query.min_price) || 0
-      this.maxPrice = Number(query.max_price) || 10000
-      this.currentPage = Number(query.page) || 1
-      
-      // Восстанавливаем сортировку из URL
-      if (query.order_by && query.order_direction) {
-        this.sortModel = `${query.order_by}:${query.order_direction}`
-      } else {
-        this.sortModel = 'created_at:desc'
-      }
-    },
-
-    // 🔄 Обновление URL с фильтрами
-    updateUrl() {
-      const query = {}
-      
-      if (this.searchQuery) query.search = this.searchQuery
-      if (this.minPrice > 0) query.min_price = this.minPrice
-      if (this.maxPrice < 10000) query.max_price = this.maxPrice
-      if (this.sortModel !== 'created_at:desc') {
-        query.order_by = this.sortBy
-        query.order_direction = this.sortDirection
-      }
-      if (this.currentPage > 1) query.page = this.currentPage
-      
-      this.$router.push({
-        path: this.$route.path,
-        query
-      })
-    },
-
-    // 🚀 Загрузка товаров с API
-    async loadProducts() {
-      this.loading = true
-      
+    const loadProducts = async () => {
+      loading.value = true
       try {
-        const params = this.getApiParams()
-        console.log('🔍 Загружаем товары с параметрами:', params)
-        
+        const params = searchFilters.getApiParams()
         const response = await productSearchApi.searchProducts(params)
-        console.log('✅ Получен ответ:', response)
         
-        this.products = response.products || []
-        this.pagination = response.pagination || this.pagination
+        products.value = response.products
+        pagination.value = response.pagination
+        currentPage.value = response.pagination.page
         
       } catch (error) {
         console.error('Ошибка загрузки товаров:', error)
-        alert('Не удалось загрузить товары. Проверьте консоль для деталей.')
       } finally {
-        this.loading = false
-      }
-    },
-
-    // 💰 Обновление цены
-    updatePrice(type, value) {
-      if (type === 'min') {
-        this.minPrice = Number(value) || 0
-      } else {
-        this.maxPrice = Number(value) || 10000
-      }
-        this.applyFilters()
-    },
-
-    // 🗑️ Сброс цены
-    resetPrice() {
-      this.minPrice = 0
-      this.maxPrice = 10000
-      this.applyFilters()
-    },
-
-    // 🔍 Очистка поиска
-    clearSearch() {
-      this.searchQuery = ''
-      this.applyFilters()
-    },
-
-    // 📄 Изменение страницы
-    handlePageChange(page) {
-      this.currentPage = page
-      this.updateUrl()
-    },
-
-    // 🎯 Применить все фильтры
-    applyFilters() {
-      this.currentPage = 1
-      this.updateUrl()
-    },
-
-    // 🗑️ Сбросить все фильтры
-    resetAllFilters() {
-      this.searchQuery = ''
-      this.minPrice = 0
-      this.maxPrice = 10000
-      this.sortModel = 'created_at:desc'
-      this.currentPage = 1
-      
-      this.$router.push({ path: this.$route.path })
-    },
-
-    // 📦 Получить параметры для API
-    getApiParams() {
-      return {
-        search: this.searchQuery || undefined,
-        min_price: this.minPrice || undefined,
-        max_price: this.maxPrice || undefined,
-        order_by: this.sortBy,
-        order_direction: this.sortDirection,
-        page: this.currentPage,
-        limit: this.pagination.limit
+        loading.value = false
       }
     }
+    
+    const handlePageChange = (page: number) => {
+      currentPage.value = page
+      searchFilters.updateFilter('page', page)
+    }
+    
+    const handleSortChange = (sortValue: string) => {
+      const [order_by, order_direction] = sortValue.split(':')
+      searchFilters.updateFilter('order_by', order_by)
+      searchFilters.updateFilter('order_direction', order_direction)
+      sortModel.value = sortValue
+    }
+    
+    const handleFilterChange = () => {
+      loadProducts()
+    }
+    
+    const resetAllFilters = () => {
+      searchFilters.resetAllFilters()
+      sortModel.value = 'created_at:desc'
+      loadProducts()
+    }
+    
+    onMounted(async () => {
+      // Определяем тип устройства
+      checkMobile()
+      window.addEventListener('resize', checkMobile)
+      
+      await categories.loadCategories()
+      
+      if (route.query.order_by && route.query.order_direction) {
+        sortModel.value = `${route.query.order_by}:${route.query.order_direction}`
+      } else {
+        sortModel.value = 'created_at:desc'
+      }
+      
+      loadProducts()
+    })
+    
+    onUnmounted(() => {
+      window.removeEventListener('resize', checkMobile)
+    })
+    
+    watch(() => route.query, () => {
+      loadProducts()
+    }, { deep: true })
+    
+    return {
+      products,
+      loading,
+      pagination,
+      currentPage,
+      sortModel,
+      sortOptions,
+      searchQuery,
+      selectedCategory,
+      pageTitle,
+      totalProducts,
+      paginationMaxPages,
+      isMobile,
+      handlePageChange,
+      handleSortChange,
+      handleFilterChange,
+      resetAllFilters,
+      loadProducts
+    }
   }
-}
+})
 </script>
 
 <style scoped>
+/* Базовые стили */
+.product-filter-page {
+  padding: 16px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Хлебные крошки */
+.breadcrumbs-adaptive {
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.breadcrumbs-adaptive::-webkit-scrollbar {
+  height: 3px;
+}
+
+.breadcrumbs-adaptive::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.breadcrumbs-adaptive::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
+}
+
+/* Шапка страницы */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title-section {
+  order: 1;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color:rgb(0, 0, 0);
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.products-count {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.sort-section {
+  order: 2;
+}
+
+.sort-select {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Основной контент */
+.page-content {
+  position: relative;
+}
+
+.content-layout {
+  display: flex;
+  gap: 24px;
+  flex-direction: column;
+}
+
+/* Фильтры - левая колонка */
+.filters-column {
+  order: 1;
+  width: 100%;
+}
+
 .sticky-filters {
   position: sticky;
   top: 20px;
 }
 
-.q-pagination {
+/* Товары - правая колонка */
+.products-column {
+  order: 2;
+  width: 100%;
+}
+
+/* Состояние загрузки */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.loading-text {
+  margin-top: 16px;
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Результаты */
+.products-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Пустое состояние */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.empty-icon {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-subtitle {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 24px;
+  max-width: 300px;
+}
+
+.reset-btn {
+  min-width: 160px;
+}
+
+/* Сетка товаров */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 20px;
+}
+
+.product-card-wrapper {
+  width: 100%;
+}
+
+/* Пагинация */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.pagination {
   border-radius: 8px;
   padding: 8px;
   background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+
+/* Мобильные устройства (≤767px) */
+@media (max-width: 767px) {
+  .product-filter-page {
+    padding: 12px;
+  }
+  
+  .page-title {
+    font-size: 1.35rem;
+  }
+  
+  .products-count {
+    font-size: 0.9rem;
+  }
+  
+  .content-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .filters-column {
+    width: 100%;
+  }
+  
+  .products-container {
+    padding: 16px;
+  }
+  
+  .products-grid {
+    gap: 16px;
+  }
+  
+  .pagination-container {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+}
+
+/* Планшеты (768px-991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .product-filter-page {
+    padding: 20px;
+  }
+  
+  .content-layout {
+    flex-direction: row;
+    gap: 20px;
+  }
+  
+  .filters-column {
+    order: 1;
+    flex: 0 0 280px;
+  }
+  
+  .products-column {
+    order: 2;
+    flex: 1;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  
+  .title-section {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .sort-section {
+    flex: 0 0 200px;
+  }
+  
+  .sort-select {
+    min-width: 200px;
+  }
+}
+
+/* Десктоп (992px-1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .product-filter-page {
+    padding: 24px;
+  }
+  
+  .content-layout {
+    flex-direction: row;
+    gap: 32px;
+  }
+  
+  .filters-column {
+    order: 1;
+    flex: 0 0 280px;
+  }
+  
+  .products-column {
+    order: 2;
+    flex: 1;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .header-content {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .sort-select {
+    min-width: 220px;
+  }
+}
+
+/* Большие десктопы (≥1200px) */
+@media (min-width: 1200px) {
+  .product-filter-page {
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .content-layout {
+    flex-direction: row;
+    gap: 40px;
+  }
+  
+  .filters-column {
+    order: 1;
+    flex: 0 0 280px;
+  }
+  
+  .products-column {
+    order: 2;
+    flex: 1;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+  
+  .header-content {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .sort-select {
+    min-width: 250px;
+  }
+}
+
+/* Очень маленькие экраны (≤480px) */
+@media (max-width: 480px) {
+  .product-filter-page {
+    padding: 8px;
+  }
+  
+  .breadcrumbs-adaptive {
+    font-size: 0.85rem;
+  }
+  
+  .page-title {
+    font-size: 1.2rem;
+  }
+  
+  .products-count {
+    font-size: 0.85rem;
+  }
+  
+  .products-container {
+    padding: 12px;
+  }
+  
+  .products-grid {
+    gap: 12px;
+  }
+  
+  .empty-state {
+    padding: 32px 16px;
+  }
+  
+  .empty-title {
+    font-size: 1.1rem;
+  }
+  
+  .empty-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .reset-btn {
+    min-width: 140px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
 }
 </style>

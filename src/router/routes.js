@@ -3,21 +3,21 @@ const routes = [
     path: '/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'home', 
-        component: () => import('pages/IndexPage.vue') 
+      {
+        path: '',
+        name: 'home',
+        component: () => import('pages/IndexPage.vue')
       }
     ]
   },
   {
-    path: '/product/',
+    path: '/product/:id',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'product', 
-        component: () => import('pages/DEMO/ProductPage.vue') 
+      {
+        path: '',
+        name: 'product',
+        component: () => import('pages/DEMO/ProductPage.vue')
       }
     ]
   },
@@ -25,10 +25,10 @@ const routes = [
     path: '/search/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'search', 
-        component: () => import('pages/DEMO/ProductFilterPage.vue') 
+      {
+        path: '',
+        name: 'search',
+        component: () => import('pages/DEMO/ProductFilterPage.vue')
       }
     ]
   },
@@ -36,10 +36,10 @@ const routes = [
     path: '/cart/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'cart', 
-        component: () => import('pages/DEMO/CartPage.vue') 
+      {
+        path: '',
+        name: 'cart',
+        component: () => import('pages/CartPage/index.vue')
       }
     ]
   },
@@ -47,10 +47,10 @@ const routes = [
     path: '/checkout/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'checkout', 
-        component: () => import('pages/DEMO/CheckoutPage.vue') 
+      {
+        path: '',
+        name: 'checkout',
+        component: () => import('pages/CheckoutPage/CheckoutPage.vue')
       }
     ]
   },
@@ -58,10 +58,10 @@ const routes = [
     path: '/orderMade/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'order-made', 
-        component: () => import('pages/DEMO/OrderDonePage.vue') 
+      {
+        path: '',
+        name: 'order-made',
+        component: () => import('pages/DEMO/OrderDonePage.vue')
       }
     ]
   },
@@ -69,21 +69,22 @@ const routes = [
     path: '/orders/',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'orders', 
-        component: () => import('pages/DEMO/OrdersPage.vue') 
+      {
+        path: '',
+        name: 'orders',
+        component: () => import('pages/DEMO/OrdersPage.vue')
       }
     ]
   },
   {
-    path: '/order/',
+    path: '/order/:orderId',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'order', 
-        component: () => import('pages/DEMO/OrderPage.vue') 
+      {
+        path: '',
+        name: 'order',
+        component: () => import('pages/DEMO/OrderPage.vue'),
+        props: true
       }
     ]
   },
@@ -91,10 +92,10 @@ const routes = [
     path: '/login',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'login', 
-        component: () => import('pages/Auth/LoginPage.vue') 
+      {
+        path: '',
+        name: 'login',
+        component: () => import('pages/Auth/LoginPage.vue')
       }
     ]
   },
@@ -102,10 +103,10 @@ const routes = [
     path: '/registration',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'registration', 
-        component: () => import('pages/Auth/RegistrationPage.vue') 
+      {
+        path: '',
+        name: 'registration',
+        component: () => import('pages/Auth/RegistrationPage.vue')
       }
     ]
   },
@@ -113,22 +114,22 @@ const routes = [
     path: '/forgotPassword',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'forgot-password', 
-        component: () => import('pages/Auth/ForgotPasswordPage.vue') 
+      {
+        path: '',
+        name: 'forgot-password',
+        component: () => import('pages/Auth/ForgotPasswordPage.vue')
       }
     ]
   },
   {
-    path: '/changePassword/:link', 
+    path: '/changePassword/:link',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'change-password', 
+      {
+        path: '',
+        name: 'change-password',
         component: () => import('pages/Auth/ChangePasswordPage.vue'),
-        props: true 
+        props: true
       }
     ]
   },
@@ -136,9 +137,9 @@ const routes = [
     path: '/activation/:link',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'activation', 
+      {
+        path: '',
+        name: 'activation',
         component: () => import('pages/Auth/AccountActivationPage.vue'),
         props: true
       }
@@ -148,10 +149,21 @@ const routes = [
     path: '/mail-sent',
     component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'mail-sent', 
-        component: () => import('pages/Auth/MailSentPage.vue') 
+      {
+        path: '',
+        name: 'mail-sent',
+        component: () => import('pages/Auth/MailSentPage.vue')
+      }
+    ]
+  },
+  {
+    path: '/createProfile',
+    component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'create-profile',
+        component: () => import('pages/Auth/CreateProfilePage.vue')
       }
     ]
   },
@@ -159,10 +171,21 @@ const routes = [
     path: '/seller/products',
     component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
     children: [
-      { 
-        path: '', 
-        name: 'seller-products', 
-        component: () => import('pages/DEMO/LkSeller/ProductsList.vue') 
+      {
+        path: '',
+        name: 'seller-products',
+        component: () => import('pages/DEMO/LkSeller/ProductsList.vue')
+      },
+      {
+        path: 'add',
+        name: 'seller-product-add',
+        component: () => import('pages/DEMO/LkSeller/ProductCreate.vue')
+      },
+      {
+        path: 'edit/:id',
+        name: 'seller-product-edit',
+        component: () => import('pages/DEMO/LkSeller/ProductEdit.vue'),
+        props: true
       }
     ]
   },
@@ -174,6 +197,17 @@ const routes = [
         path: '', 
         name: 'seller-orders', 
         component: () => import('pages/DEMO/LkSeller/OrdersList.vue') 
+      },
+      {
+        path: '',
+        name: 'seller-orders',
+        component: () => import('pages/DEMO/LkSeller/OrdersList.vue')
+      },
+      {
+        path: ':id',
+        name: 'seller-order-details',
+        component: () => import('pages/DEMO/LkSeller/OrderDetails.vue'),
+        props: true
       }
     ]
   },
@@ -231,6 +265,52 @@ const routes = [
       }
     ]
   },
+  {
+    path: '/info',
+    component: () => import('src/app/MainLayout/ui/MainLayout.vue'),
+    children: [
+      { 
+        path: '', 
+        name: 'info', 
+        component: () => import('pages/InfoPage.vue') 
+      }
+    ]
+  },
+  {
+    path: '/admin/shops',
+    component: () => import('src/widgets/AdminLayout/ui/AdminLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'admin-shops',
+        component: () => import('pages/Admin/ShopsPage.vue')
+      }
+    ]
+  },
+  {
+    path: '/admin/opps',
+    component: () => import('src/widgets/AdminLayout/ui/AdminLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'admin-opps',
+        component: () => import('pages/Admin/OppsPage.vue')
+      }
+    ]
+  },
+  {
+    path: '/seller/shops',
+    component: () => import('src/widgets/LkSellerLayout/ui/LkSellerLayout.vue'),
+    children: [
+      {
+        path: '', 
+        name: '',
+        component: () => import('pages/DEMO/LkSeller/EditShop.vue')}
+    ]
+  },
+
+  // Always leave this as last one,
+  // but you can also remove it
   {
     path: '/:catchAll(.*)*',
     name: 'not-found',

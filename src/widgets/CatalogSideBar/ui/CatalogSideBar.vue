@@ -3,22 +3,22 @@
   <div class="catalog-sidebar bg-grey-1 q-pa-md">
     <q-list padding>
       <q-item-label header class="text-weight-bold">
-        Категории ({{ categories.length }})
+        Категории ({{ categoriesArray.length }})
       </q-item-label>
 
       <!-- Динамически рендерим категории -->
-      <q-item 
-        v-for="category in categories"
+      <q-item
+        v-for="category in categoriesArray"
         :key="category.id"
-        clickable 
-        v-ripple 
+        clickable
+        v-ripple
         :active="activeCategoryId === category.id"
         @click="$emit('select', category.id)"
       >
         <q-item-section>
           {{ category.name }}
         </q-item-section>
-        
+
         <!-- Галочка для активной категории -->
         <q-item-section avatar v-if="activeCategoryId === category.id">
           <q-icon name="check" color="primary" />
@@ -29,17 +29,22 @@
 </template>
 
 <script>
-// Импортируем getAllCategories из конфига
-import { getAllCategories } from 'src/entities/catalog/config/categories'
-
 export default {
   name: 'CatalogSideBar',
   props: {
-    activeCategoryId: String
+    activeCategoryId: [String, Number],
+    categories: {
+      type: Object,
+      default: () => ({})
+    }
   },
-  data() {
-    return {
-      categories: getAllCategories()  // Используем функцию
+  computed: {
+    categoriesArray() {
+      // Преобразуем объект категорий в массив
+      return Object.values(this.categories).map(cat => ({
+        id: cat.id,
+        name: cat.name
+      }))
     }
   }
 }

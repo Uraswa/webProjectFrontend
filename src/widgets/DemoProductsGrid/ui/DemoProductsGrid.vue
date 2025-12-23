@@ -18,17 +18,15 @@ export default defineComponent({
 
 <template>
   <div>
-    <!-- если массив пустой, показываем сообщение -->
     <div v-if="products.length === 0" class="text-center">
       Товары не найдены
     </div>
 
-    <div class="row" v-else>
+    <div class="row q-col-gutter-md" v-else>
       <div 
         class="col-lg-3 col-md-4 col-sm-6 col-12"
-        v-for="(product, index) in products"
+        v-for="product in products"
         :key="product.product_id"
-        :style="index % 4 === 0 ? 'padding: 15px 15px 15px 0;' : 'padding: 15px 15px;'"
       >
         <ProductCard :product="product"/>
       </div>

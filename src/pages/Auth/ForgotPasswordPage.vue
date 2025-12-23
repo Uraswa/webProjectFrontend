@@ -15,7 +15,7 @@ export default {
   methods: {
     async onSubmit(){
       this.is_loading = true;
-      let response = await Api.post('/api/users/forgotPassword', {
+      let response = await Api.post('/api/forgotPassword', {
         email: this.email
       });
       if (response.status === 200 && response.data.success) {

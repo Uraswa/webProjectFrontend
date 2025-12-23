@@ -1,7 +1,7 @@
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 
-let baseUrl = "http://212.33.245.152/";
+let baseUrl = "http://localhost:8000/";
 
 const $api = axios.create({
   withCredentials: true,
@@ -9,10 +9,14 @@ const $api = axios.create({
 })
 
 $api.interceptors.request.use((config) => {
-  config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
   if (config.port) {
-    config.baseURL = `${baseUrl}:${config.port}`;
+    const baseOrigin = new URL(baseUrl);
+    config.baseURL = `${baseOrigin.protocol}//${baseOrigin.hostname}:${config.port}/`;
     delete config.port; // Удаляем, чтобы не мешал
   }
 
@@ -25,14 +29,15 @@ $api.interceptors.response.use((config) => {
   return config;
 },async (error) => {
   const originalRequest = error.config;
-  if (error.response.status === 401 && error.config && !error.config._isRetry) {
+  if (error.response?.status === 401 && error.config && !error.config._isRetry) {
     originalRequest._isRetry = true;
     try {
       await Api.refreshToken();
       return $api.request(originalRequest);
     } catch (e) {
       console.log(e);
-      window.em.send('NOT_AUTHORIZED')
+
+      window?.em?.send?.('NOT_AUTHORIZED')
     }
   }
   throw error;
@@ -75,7 +80,7 @@ export default class Api {
 
   static async refreshToken(){
     Api.isTokenRefreshing = true;
-    const response = await axios.post(`${baseUrl}/api/users/refreshToken`, {}, {withCredentials: true})
+    const response = await axios.post(`${baseUrl}api/refreshToken`, {}, {withCredentials: true})
     this.setToken(response.data.data.accessToken);
     Api.isTokenRefreshing = false;
     return response.data.data.accessToken;
@@ -93,6 +98,17 @@ export default class Api {
 
   static async post(endPoint, data){
     return await $api.post(endPoint, data);
+  }
 
+  static async put(endPoint, data) {
+    return await $api.put(endPoint, data);
+  }
+
+  static async patch(endPoint, data) {
+    return await $api.patch(endPoint, data);
+  }
+
+  static async delete(endPoint){
+    return await $api.delete(endPoint);
   }
 }
