@@ -59,15 +59,6 @@ export default {
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple to="/pvz-owner/receive-goods">
-            <q-item-section avatar>
-              <q-icon name="inventory" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Приём товара</q-item-label>
-            </q-item-section>
-          </q-item>
-
           <q-item clickable v-ripple to="/pvz-owner/operations">
             <q-item-section avatar>
               <q-icon name="swap_horiz" />
