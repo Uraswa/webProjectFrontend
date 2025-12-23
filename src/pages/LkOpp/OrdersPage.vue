@@ -4,6 +4,8 @@ import { useOppId } from 'src/features/oppSelection/lib/useOppId'
 import { getStatusColor, getStatusText } from 'src/entities/OppOrder/lib/statusHelpers'
 import OrderDetailsDialog from 'src/features/oppOrders/ui/OrderDetailsDialog.vue'
 
+const STATUS_ENUM = ['packing', 'shipping', 'waiting', 'done', 'canceled']
+
 export default {
   name: 'OrdersPage',
   components: {
@@ -20,11 +22,10 @@ export default {
       orders: [],
       selectedOrder: null,
       showDetailsDialog: false,
-      statusOptions: [
-        { label: 'Ожидает в ПВЗ', value: 'waiting' },
-        { label: 'Выдан', value: 'done' },
-        { label: 'Отменён', value: 'canceled' }
-      ],
+      statusOptions: STATUS_ENUM.map((status) => ({
+        label: getStatusText(status),
+        value: status
+      })),
       sortOptions: [
         { label: 'По дате (новые)', value: 'created_at:desc' },
         { label: 'По дате (старые)', value: 'created_at:asc' },
@@ -125,7 +126,7 @@ export default {
       try {
         const params = {}
         if (this.statusFilter) {
-          params.status = this.statusFilter.value
+          params.status = this.statusFilter
         }
 
         this.orders = await oppOrdersApi.getOrders(this.oppId, params)

@@ -1,5 +1,7 @@
 export function getStatusColor(status: string): string {
   const statusColors: Record<string, string> = {
+    'packing': 'blue-grey',
+    'shipping': 'blue',
     'waiting': 'orange',
     'done': 'green',
     'canceled': 'red',
@@ -12,6 +14,8 @@ export function getStatusColor(status: string): string {
 
 export function getStatusText(status: string): string {
   const statusTexts: Record<string, string> = {
+    'packing': 'Упаковывается',
+    'shipping': 'В доставке',
     'waiting': 'Ожидает в ПВЗ',
     'done': 'Выдан',
     'canceled': 'Отменён',
