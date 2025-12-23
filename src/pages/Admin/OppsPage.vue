@@ -1,23 +1,25 @@
 <template>
-  <q-page class="q-pa-lg">
-    <div class="row items-center justify-between q-mb-lg">
+  <q-page class="q-pa-md q-pa-sm-lg">
+    <div class="row items-center justify-between q-mb-md q-mb-lg-sm">
       <div>
-        <div class="text-h4 text-weight-bold">ПВЗ</div>
+        <div class="text-h4 text-h5-sm text-weight-bold">ПВЗ</div>
         <div class="text-caption text-grey-7">Управление пунктами выдачи</div>
       </div>
       <q-btn
         label="Добавить ПВЗ"
+        label-sm="Добавить"
         color="primary"
         icon="add"
         unelevated
+        class="q-mt-xs q-mt-none-sm"
         @click="openCreateDialog"
       />
     </div>
 
-    <q-card flat bordered class="q-mb-lg">
-      <q-card-section>
-        <div class="row items-center q-col-gutter-md">
-          <div class="col-12 col-md-6">
+    <q-card flat bordered class="q-mb-md q-mb-lg-sm">
+      <q-card-section class="q-pa-md">
+        <div class="row items-center q-col-gutter-sm q-col-gutter-md-sm">
+          <div class="col-12 col-sm-8 col-md-6">
             <q-input
               v-model="searchQuery"
               placeholder="Поиск по адресу или владельцу"
@@ -26,15 +28,17 @@
               clearable
               debounce="400"
               @update:model-value="fetchOpps"
+              class="full-width"
             >
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
             </q-input>
           </div>
-          <div class="col-12 col-md-2">
+          <div class="col-12 col-sm-4 col-md-2">
             <q-btn
               label="Обновить"
+              label-sm="Обновить"
               color="primary"
               class="full-width"
               outline
@@ -45,74 +49,78 @@
       </q-card-section>
     </q-card>
 
-    <q-card flat bordered>
-      <q-table
-        :rows="opps"
-        :columns="columns"
-        row-key="opp_id"
-        :loading="loading"
-        flat
-        bordered
-        rows-per-page-label="Записей на странице"
-        :rows-per-page-options="[5, 10, 20, 50]"
-        :pagination-label="paginationLabel"
-        no-data-label="ПВЗ не найдены"
-      >
-        <template v-slot:body-cell-enabled="props">
-          <q-td :props="props">
-            <q-badge
-              :color="props.row.enabled ? 'green' : 'grey'"
-              :label="props.row.enabled ? 'Включен' : 'Выключен'"
-            />
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-owner="props">
-          <q-td :props="props">
-            <div>{{ getOwnerPrimary(props.row) }}</div>
-            <div v-if="getOwnerSecondary(props.row)" class="text-caption text-grey-7">
-              {{ getOwnerSecondary(props.row) }}
-            </div>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
-            <div class="row q-gutter-xs justify-end">
-              <q-btn
-                icon="edit"
-                size="sm"
-                color="primary"
-                dense
-                flat
-                @click="openEditDialog(props.row)"
+    <div class="scrollable-table-wrapper">
+      <q-card flat bordered>
+        <q-table
+          :rows="opps"
+          :columns="columns"
+          row-key="opp_id"
+          :loading="loading"
+          flat
+          bordered
+          rows-per-page-label="Записей на странице"
+          :rows-per-page-options="[5, 10, 20, 50]"
+          :pagination-label="paginationLabel"
+          no-data-label="ПВЗ не найдены"
+          :visible-columns="visibleColumns"
+          class="admin-opps-table"
+        >
+          <template v-slot:body-cell-enabled="props">
+            <q-td :props="props">
+              <q-badge
+                :color="props.row.enabled ? 'green' : 'grey'"
+                :label="props.row.enabled ? 'Включен' : 'Выключен'"
               />
-              <q-btn
-                icon="delete"
-                size="sm"
-                color="negative"
-                dense
-                flat
-                @click="confirmDelete(props.row)"
-              />
-            </div>
-          </q-td>
-        </template>
-      </q-table>
-    </q-card>
+            </q-td>
+          </template>
+
+          <template v-slot:body-cell-owner="props">
+            <q-td :props="props">
+              <div class="text-body2 text-body1-sm">{{ getOwnerPrimary(props.row) }}</div>
+              <div v-if="getOwnerSecondary(props.row)" class="text-caption text-caption-sm text-grey-7">
+                {{ getOwnerSecondary(props.row) }}
+              </div>
+            </q-td>
+          </template>
+
+          <template v-slot:body-cell-actions="props">
+            <q-td :props="props" class="text-right">
+              <div class="row q-gutter-xs justify-end">
+                <q-btn
+                  icon="edit"
+                  size="sm"
+                  color="primary"
+                  dense
+                  flat
+                  @click="openEditDialog(props.row)"
+                />
+                <q-btn
+                  icon="delete"
+                  size="sm"
+                  color="negative"
+                  dense
+                  flat
+                  @click="confirmDelete(props.row)"
+                />
+              </div>
+            </q-td>
+          </template>
+        </q-table>
+      </q-card>
+    </div>
 
     <div v-if="errorMessage" class="text-negative q-mt-md">
       {{ errorMessage }}
     </div>
 
-    <q-dialog v-model="formDialog" @hide="resetForm">
-      <q-card style="min-width: 560px">
+    <q-dialog v-model="formDialog" @hide="resetForm" :maximized="$q.screen.lt.sm">
+      <q-card :style="$q.screen.lt.sm ? 'width: 100%' : 'min-width: 560px'">
         <q-card-section>
-          <div class="text-h6">{{ isEdit ? "Редактировать ПВЗ" : "Создать ПВЗ" }}</div>
+          <div class="text-h6 text-h6-sm">{{ isEdit ? "Редактировать ПВЗ" : "Создать ПВЗ" }}</div>
         </q-card-section>
 
         <q-form @submit.prevent="submitForm">
-          <q-card-section class="q-gutter-md">
+          <q-card-section class="q-gutter-md q-pa-md">
             <q-input
               v-model="form.address"
               label="Адрес"
@@ -121,8 +129,8 @@
               :rules="[val => !!val || 'Адрес обязателен']"
             />
 
-            <div class="row q-col-gutter-md q-pl-md q-pr-md">
-              <div class="col-12 col-md-6">
+            <div class="row q-col-gutter-md">
+              <div class="col-12 col-sm-6">
                 <q-input
                   v-model.number="form.latitude"
                   label="Широта"
@@ -132,7 +140,7 @@
                   :rules="[val => val !== null && val !== '' || 'Широта обязательна']"
                 />
               </div>
-              <div class="col-12 col-md-6">
+              <div class="col-12 col-sm-6">
                 <q-input
                   v-model.number="form.longitude"
                   label="Долгота"
@@ -146,7 +154,7 @@
 
             <div class="q-mt-xs">
               <div class="row items-center">
-                <div class="text-subtitle2">Статус ПВЗ:</div>
+                <div class="text-subtitle2 text-subtitle2-sm">Статус ПВЗ:</div>
                 <q-toggle
                   v-model="form.enabled"
                   label="Активен"
@@ -154,15 +162,15 @@
                   class="q-ml-md"
                 />
               </div>
-              <div class="text-caption text-grey-7 q-mt-xs">
+              <div class="text-caption text-caption-sm text-grey-7 q-mt-xs">
                 {{ statusHint }}
               </div>
             </div>
 
             <div>
-              <div class="text-subtitle2 q-mb-xs">График работы</div>
-              <div class="row q-col-gutter-md">
-                <div class="col-12 col-md-6">
+              <div class="text-subtitle2 text-subtitle2-sm q-mb-xs">График работы</div>
+              <div class="row q-col-gutter-sm q-col-gutter-md-sm">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.mon"
                     label="Понедельник"
@@ -171,7 +179,7 @@
                     placeholder="09:00-20:00"
                   />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.tue"
                     label="Вторник"
@@ -180,7 +188,7 @@
                     placeholder="09:00-20:00"
                   />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.wed"
                     label="Среда"
@@ -189,7 +197,7 @@
                     placeholder="09:00-20:00"
                   />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.thu"
                     label="Четверг"
@@ -198,7 +206,7 @@
                     placeholder="09:00-20:00"
                   />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.fri"
                     label="Пятница"
@@ -207,7 +215,7 @@
                     placeholder="09:00-20:00"
                   />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.sat"
                     label="Суббота"
@@ -216,7 +224,7 @@
                     placeholder="09:00-20:00"
                   />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-sm-6">
                   <q-input
                     v-model="form.workTime.sun"
                     label="Воскресенье"
@@ -238,12 +246,12 @@
               :rules="[val => val !== null && val !== '' || 'ID владельца обязателен']"
             />
 
-            <div v-if="formError" class="text-negative text-caption">
+            <div v-if="formError" class="text-negative text-caption text-caption-sm">
               {{ formError }}
             </div>
           </q-card-section>
 
-          <q-card-actions align="right">
+          <q-card-actions align="right" class="q-pa-md">
             <q-btn flat label="Отмена" v-close-popup />
             <q-btn
               label="Сохранить"
@@ -256,15 +264,15 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="deleteDialog">
-      <q-card>
+    <q-dialog v-model="deleteDialog" :maximized="$q.screen.lt.sm">
+      <q-card :style="$q.screen.lt.sm ? 'width: 100%' : ''">
         <q-card-section>
-          <div class="text-h6">Удалить ПВЗ</div>
+          <div class="text-h6 text-h6-sm">Удалить ПВЗ</div>
         </q-card-section>
         <q-card-section>
           Удалить ПВЗ "{{ deleteTarget?.address }}"?
         </q-card-section>
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Отмена" v-close-popup />
           <q-btn
             label="Удалить"
@@ -375,6 +383,14 @@ export default {
         return this.form.enabled
         ? "ПВЗ отображается для пользователей"
         : "ПВЗ не отображается для пользователей";
+    },
+    visibleColumns() {
+      if (this.$q.screen.lt.sm) {
+        return ['address', 'owner', 'actions'];
+      } else if (this.$q.screen.lt.md) {
+        return ['opp_id', 'address', 'owner', 'actions'];
+      }
+      return ['opp_id', 'address', 'coords', 'enabled', 'work_time', 'owner', 'actions'];
     }
   },
   mounted() {
@@ -638,3 +654,42 @@ function formatWorkTime(workTime) {
   return parts.length ? parts.join(", ") : "-";
 }
 </script>
+
+<style scoped>
+.scrollable-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .scrollable-table-wrapper {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+  }
+  
+  .admin-opps-table {
+    min-width: 700px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-opps-table :deep(.q-table__top) {
+    padding: 8px;
+  }
+  
+  .admin-opps-table :deep(.q-table__bottom) {
+    padding: 8px;
+  }
+  
+  .admin-opps-table :deep(.q-table thead tr th) {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+  
+  .admin-opps-table :deep(.q-table tbody tr td) {
+    font-size: 13px;
+    padding: 8px 4px;
+  }
+}
+</style>
