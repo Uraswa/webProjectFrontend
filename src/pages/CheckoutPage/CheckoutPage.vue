@@ -58,47 +58,48 @@
             <div class="text-h6 text-weight-bold q-mb-md">Товары в заказе</div>
 
             <div class="column q-gutter-y-md">
-              <q-item
+              <div
                 v-for="item in cartItems"
                 :key="item.id"
-                class="q-pa-none cart-item"
+                class="cart-item"
               >
-                <q-item-section avatar>
-                  <router-link :to="`/product/${item.product_id}`" style="text-decoration: none;">
-                    <q-img
-                      :src="item.image"
-                      width="80px"
-                      height="80px"
-                      class="rounded-borders"
-                      :ratio="1"
-                    />
-                  </router-link>
-                </q-item-section>
-
-                <q-item-section>
-                  <router-link :to="`/product/${item.product.product_id}`"
-                               style="text-decoration: none; color: inherit;">
-                    <q-item-label class="text-weight-medium cursor-pointer">
-                      {{ item.product.name }}
-                    </q-item-label>
-                  </router-link>
-                  <q-item-label caption lines="2">{{ item.product.description }}</q-item-label>
-                  <q-item-label caption class="text-grey-6">
-                    Магазин: {{ item.product.shop_name }}
-                  </q-item-label>
-                </q-item-section>
-
-                <q-item-section side>
-                  <div class="column items-end q-gutter-y-xs">
-                    <div class="text-h6 text-weight-bold text-primary">
-                      {{ (item.product.price * item.quantity).toFixed(2) }}₽
-                    </div>
-                    <div class="text-caption text-grey-7">
-                      {{ item.product.price }}₽ × {{ item.quantity }} шт.
+                <div class="row items-center">
+                  <div class="col-auto">
+                    <router-link :to="`/product/${item.product.product_id}`" style="text-decoration: none;">
+                      <q-img
+                        :src="getFirstImage(item.product.photos)"
+                        width="80px"
+                        height="80px"
+                        class="rounded-borders"
+                        :ratio="1"
+                        :alt="item.product.name"
+                      />
+                    </router-link>
+                  </div>
+                  
+                  <div class="col q-pl-md">
+                    <router-link :to="`/product/${item.product.product_id}`"
+                                 style="text-decoration: none; color: inherit;">
+                      <div class="text-weight-medium cursor-pointer">
+                        {{ item.product.name }}
+                      </div>
+                    </router-link>
+                    <div class="text-caption text-grey-7">{{ item.product.description }}</div>
+                    <div class="text-caption text-grey-6">
+                      Магазин: {{ item.product.shop_name }}
                     </div>
                   </div>
-                </q-item-section>
-              </q-item>
+                  
+                  <div class="col-auto text-right">
+                    <div class="text-h6 text-weight-bold text-primary">
+                      {{ (parseFloat(item.product.price) * item.quantity).toFixed(2) }}₽
+                    </div>
+                    <div class="text-caption text-grey-7">
+                      {{ parseFloat(item.product.price).toFixed(2) }}₽ × {{ item.quantity }} шт.
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </q-card-section>
         </q-card>
@@ -156,6 +157,7 @@
 import Api from "src/shared/api/Api.js";
 import OppSelector from "pages/CheckoutPage/OppSelector.vue";
 import {cartApi} from "src/features/cart/api/cartApi.js";
+import { parseProductPhotos } from "src/shared/utils/parsePhotos";
 
 export default {
   name: "CheckoutPage",
@@ -178,13 +180,13 @@ export default {
     async fetchCart() {
       try {
         let cardItems = (await cartApi.getCart()).items;
-        console.log(cardItems)
-
+        console.log('Cart items:', cardItems);
+        
         this.cartItems = cardItems;
 
         this.calculateTotalPrice();
       } catch (e) {
-
+        console.error('Error fetching cart:', e);
       }
     },
     calculateTotalPrice() {
@@ -196,13 +198,20 @@ export default {
       this.selectedOpp = opp;
       console.log('Selected OPP:', opp);
     },
+    getFirstImage(photosString) {
+      try {
+        const photos = parseProductPhotos(photosString);
+        return photos && photos.length > 0 ? photos[0] : 'https://via.placeholder.com/80';
+      } catch (e) {
+        console.error('Error parsing photos:', e);
+        return 'https://via.placeholder.com/80';
+      }
+    },
     async createOrder() {
       if (!this.selectedOpp || !this.selectedOpp.opp_id) {
-
         return;
       }
 
-      // Здесь будет логика создания заказа
       console.log('Creating order with OPP:', this.selectedOpp);
       try {
         let response = await Api.post('/api/orders/create', {opp_id: this.selectedOpp.opp_id})
@@ -232,11 +241,13 @@ export default {
 .cart-item {
   border-bottom: 1px solid #f0f0f0;
   padding-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .cart-item:last-child {
   border-bottom: none;
   padding-bottom: 0;
+  margin-bottom: 0;
 }
 
 .cursor-pointer {
@@ -249,5 +260,26 @@ export default {
 
 .border-primary {
   border: 2px solid #1976d2 !important;
+}
+
+@media (max-width: 600px) {
+  .cart-item .row {
+    flex-wrap: wrap;
+  }
+  
+  .cart-item .col {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding-left: 0;
+    margin-top: 8px;
+  }
+  
+  .cart-item .col-auto.text-right {
+    flex: 0 0 100%;
+    max-width: 100%;
+    text-align: left;
+    margin-top: 8px;
+    padding-left: 88px; /* отступ под картинку */
+  }
 }
 </style>
