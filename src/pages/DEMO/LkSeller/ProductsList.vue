@@ -331,7 +331,11 @@ export default {
         Notify.create({ type: "positive", message: "Товар удалён" });
       } catch (error) {
         console.error("Ошибка удаления товара:", error);
-        Notify.create({ type: "negative", message: "Не удалось удалить товар" });
+        const message =
+          error?.response?.data?.error ||
+          error?.message ||
+          "Не удалось удалить товар";
+        Notify.create({ type: "negative", message });
       } finally {
         this.selectedProduct = null
       }
