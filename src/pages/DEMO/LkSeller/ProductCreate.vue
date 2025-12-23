@@ -71,6 +71,17 @@
           />
 
           <q-input
+            v-model.number="form.stockChange"
+            label="Добавить поставку товара"
+            dense
+            outlined
+            type="number"
+            step="1"
+            :disable="loading"
+            hint="Положительное значение добавит товар, отрицательное - уменьшит остаток"
+          />
+
+          <q-input
             v-model="form.photos"
             label="Фото (через запятую: url или имя файла)"
             dense
@@ -88,6 +99,14 @@
             autogrow
           />
 
+          <q-separator class="q-my-md" />
+
+          <ProductCharacteristicsEditor
+            :category-id="form.categoryId"
+            v-model="form.characteristics"
+            :disable="loading"
+          />
+
         </q-card-section>
 
         <q-card-actions align="right">
@@ -102,9 +121,13 @@
 <script>
 import Api from "src/shared/api/Api.js";
 import { Notify } from "quasar";
+import ProductCharacteristicsEditor from "./components/ProductCharacteristicsEditor.vue";
 
 export default {
   name: "SellerProductCreatePage",
+  components: {
+    ProductCharacteristicsEditor,
+  },
   data() {
     return {
       loading: false,
@@ -117,6 +140,8 @@ export default {
         description: "",
         price: null,
         photos: "",
+        stockChange: 0,
+        characteristics: {},
       },
     };
   },
@@ -178,6 +203,8 @@ export default {
           description: this.form.description,
           price: priceValue.toFixed(2),
           photos: JSON.stringify(this.parsePhotos(this.form.photos)),
+          stockChange: Number(this.form.stockChange) || 0,
+          characteristics: this.form.characteristics || {},
         };
 
         const { data } = await Api.post("/api/products", payload);

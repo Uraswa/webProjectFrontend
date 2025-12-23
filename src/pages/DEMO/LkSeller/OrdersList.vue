@@ -14,6 +14,7 @@
           <div class="col-12 col-md-3">
             <q-input
               v-model="searchQuery"
+              @update:model-value="appliedSearchQuery = searchQuery"
               placeholder="Поиск по номеру заказа..."
               dense
               outlined
@@ -24,43 +25,6 @@
               </template>
             </q-input>
           </div>
-          <div class="col-12 col-md-3">
-            <q-select
-              v-model="statusFilter"
-              :options="statusOptions"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-              label="Статус заказа"
-              dense
-              outlined
-              clearable
-            />
-          </div>
-          <div class="col-12 col-md-3">
-            <q-select
-              v-model="pvzFilter"
-              :options="pvzOptions"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-              label="ПВЗ"
-              dense
-              outlined
-              clearable
-            />
-          </div>
-          <div class="col-12 col-md-3">
-            <q-btn
-              label="Применить фильтры"
-              color="primary"
-              class="full-width"
-              unelevated
-              @click="applyFilters"
-            />
-          </div>
         </div>
       </q-card-section>
     </q-card>
@@ -70,7 +34,7 @@
       <q-table
         :rows="filteredOrders"
         :columns="columns"
-        row-key="id"
+        row-key="order_id"
         :loading="loading"
         flat
         bordered
@@ -84,9 +48,9 @@
           <q-td :props="props">
             <div class="row q-gutter-xs">
               <q-img
-                v-for="(product, index) in props.row.products"
+                v-for="(product, index) in getProductPhotos(props.row.products).slice(0, 3)"
                 :key="index"
-                :src="product.photo"
+                :src="product"
                 width="40px"
                 height="40px"
                 class="rounded-borders"
@@ -102,28 +66,17 @@
           </q-td>
         </template>
 
-        <!-- Колонка со статусом -->
-        <template v-slot:body-cell-status="props">
+        <!-- Колонка с количеством товаров -->
+        <template v-slot:body-cell-productsCount="props">
           <q-td :props="props">
-            <q-badge
-              :color="getStatusColor(props.row.status)"
-              :label="getStatusText(props.row.status)"
-            />
+            <div class="text-center">{{ getTotalProductsCount(props.row.products) }}</div>
           </q-td>
         </template>
 
         <!-- Колонка с суммой -->
         <template v-slot:body-cell-total="props">
           <q-td :props="props">
-            <div class="text-weight-bold text-primary">{{ props.row.total }}₽</div>
-          </q-td>
-        </template>
-
-        <!-- Колонка с ПВЗ -->
-        <template v-slot:body-cell-pvz="props">
-          <q-td :props="props">
-            <div class="text-caption">{{ props.row.pvz.address }}</div>
-            <div class="text-caption text-grey-7">{{ props.row.pvz.workingHours }}</div>
+            <div class="text-weight-bold text-primary">{{ formatPrice(props.row.total) }}</div>
           </q-td>
         </template>
 
@@ -137,7 +90,7 @@
                 color="primary"
                 dense
                 flat
-                :to="`/seller/orders/${props.row.id}`"
+                :to="`/seller/orders/${props.row.order_id}`"
               />
             </div>
           </q-td>
@@ -151,39 +104,19 @@
 import Api from "src/shared/api/Api.js";
 import { Notify } from "quasar";
 
-const STATUS_LABELS = {
-  packing: "Упаковывается",
-  shipping: "В пути",
-  waiting: "Ожидает в ПВЗ",
-  done: "Доставлен",
-  canceled: "Отменён",
-};
-
 export default {
   name: "SellerOrdersPage",
   data() {
     return {
       searchQuery: '',
-      statusFilter: null,
-      pvzFilter: null,
       appliedSearchQuery: '',
-      appliedStatus: null,
-      appliedPvz: null,
       loading: false,
       shopId: null,
-      statusOptions: [
-        { label: STATUS_LABELS.packing, value: 'packing' },
-        { label: STATUS_LABELS.shipping, value: 'shipping' },
-        { label: STATUS_LABELS.waiting, value: 'waiting' },
-        { label: STATUS_LABELS.done, value: 'done' },
-        { label: STATUS_LABELS.canceled, value: 'canceled' }
-      ],
-      pvzOptions: [],
       columns: [
         {
-          name: 'id',
+          name: 'order_id',
           label: 'Номер заказа',
-          field: 'id',
+          field: 'order_id',
           align: 'left',
           sortable: true
         },
@@ -195,6 +128,13 @@ export default {
           sortable: false
         },
         {
+          name: 'productsCount',
+          label: 'Количество',
+          field: 'productsCount',
+          align: 'center',
+          sortable: false
+        },
+        {
           name: 'total',
           label: 'Сумма',
           field: 'total',
@@ -202,25 +142,12 @@ export default {
           sortable: true
         },
         {
-          name: 'status',
-          label: 'Статус',
-          field: 'status',
-          align: 'center',
-          sortable: true
-        },
-        {
-          name: 'pvz',
-          label: 'Пункт выдачи',
-          field: 'pvz',
-          align: 'left',
-          sortable: true
-        },
-        {
-          name: 'createdDate',
+          name: 'created_date',
           label: 'Дата создания',
-          field: 'createdDate',
+          field: 'created_date',
           align: 'center',
-          sortable: true
+          sortable: true,
+          format: (val) => this.formatDate(val)
         },
         {
           name: 'actions',
@@ -234,20 +161,14 @@ export default {
     }
   },
   mounted() {
-    this.fetchOpps();
     this.fetchOrders();
-    this.applyFilters();
   },
   computed: {
     filteredOrders() {
       const search = String(this.appliedSearchQuery || '').trim().toLowerCase();
-      const status = this.appliedStatus;
-      const pvz = this.appliedPvz;
 
       return (this.orders || []).filter((order) => {
-        if (search && !String(order.id || '').toLowerCase().includes(search)) return false;
-        if (status && order.status !== status) return false;
-        if (pvz && Number(order.opp_id) !== Number(pvz)) return false;
+        if (search && !String(order.order_id || '').toLowerCase().includes(search)) return false;
         return true;
       });
     }
@@ -256,11 +177,6 @@ export default {
     paginationLabel(firstRowIndex, endRowIndex, totalRowsNumber) {
       return `${firstRowIndex}-${endRowIndex} из ${totalRowsNumber}`;
     },
-    applyFilters() {
-      this.appliedSearchQuery = this.searchQuery;
-      this.appliedStatus = this.statusFilter;
-      this.appliedPvz = this.pvzFilter;
-    },
     formatDate(value) {
       if (!value) return '';
       const date = new Date(value);
@@ -268,7 +184,12 @@ export default {
       const dd = String(date.getDate()).padStart(2, '0');
       const mm = String(date.getMonth() + 1).padStart(2, '0');
       const yyyy = date.getFullYear();
-      return `${dd}.${mm}.${yyyy}`;
+      const hh = String(date.getHours()).padStart(2, '0');
+      const min = String(date.getMinutes()).padStart(2, '0');
+      return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+    },
+    formatPrice(value) {
+      return `${Number(value).toFixed(2)}₽`;
     },
     extractFirstPhoto(productPhotos) {
       if (!productPhotos) return null;
@@ -283,18 +204,13 @@ export default {
       }
       return null;
     },
-    async fetchOpps() {
-      try {
-        const { data } = await Api.get('/api/opp');
-        const oppList = data?.success ? (data.data || []) : [];
-        this.pvzOptions = oppList.map((opp) => ({
-          label: opp.address,
-          value: opp.opp_id,
-        }));
-      } catch (error) {
-        console.error('Ошибка получения ПВЗ:', error);
-        Notify.create({ type: 'negative', message: 'Не удалось загрузить список ПВЗ' });
-      }
+    getProductPhotos(products) {
+      if (!Array.isArray(products)) return [];
+      return products.map(product => this.extractFirstPhoto(product.photos)).filter(Boolean);
+    },
+    getTotalProductsCount(products) {
+      if (!Array.isArray(products)) return 0;
+      return products.reduce((sum, product) => sum + (Number(product.ordered_count) || 0), 0);
     },
     async fetchOrders() {
       try {
@@ -314,38 +230,7 @@ export default {
         const { data } = await Api.get(`/api/orders/shop/${this.shopId}`);
         const rows = Array.isArray(data) ? data : [];
 
-        const grouped = new Map();
-        for (const row of rows) {
-          const orderId = String(row.order_id);
-          const existing = grouped.get(orderId);
-          const photo = this.extractFirstPhoto(row.product_photos) || 'https://cdn.quasar.dev/img/parallax2.jpg';
-          const itemSubtotal = Number(row.ordered_count) * Number(row.price);
-
-          if (!existing) {
-            grouped.set(orderId, {
-              id: orderId,
-              opp_id: row.opp_id,
-              total: Number.isFinite(itemSubtotal) ? itemSubtotal : 0,
-              status: row.current_status,
-              createdDate: this.formatDate(row.created_date),
-              pvz: {
-                address: row.opp_address,
-                workingHours: row.opp_work_time ? JSON.stringify(row.opp_work_time) : ''
-              },
-              products: [{ photo }]
-            });
-          } else {
-            existing.total += Number.isFinite(itemSubtotal) ? itemSubtotal : 0;
-            if (existing.products.length < 3) {
-              existing.products.push({ photo });
-            }
-          }
-        }
-
-        this.orders = Array.from(grouped.values()).map((o) => ({
-          ...o,
-          total: Number(o.total).toFixed(2),
-        }));
+        this.orders = rows;
       } catch (error) {
         console.error('Ошибка получения заказов:', error);
         Notify.create({ type: 'negative', message: 'Не удалось загрузить заказы' });
@@ -353,23 +238,6 @@ export default {
         this.loading = false;
       }
     },
-    getStatusColor(status) {
-      const colors = {
-        packing: 'orange',
-        shipping: 'blue',
-        waiting: 'yellow',
-        done: 'green',
-        canceled: 'red'
-      }
-      return colors[status] || 'grey'
-    },
-    getStatusText(status) {
-      return STATUS_LABELS[status] || 'Неизвестно'
-    },
-    updateStatus(order, newStatus) {
-      // Логика обновления статуса заказа
-      order.status = newStatus
-    }
   }
 }
 </script>
