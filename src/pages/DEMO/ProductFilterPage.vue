@@ -319,7 +319,7 @@ export default defineComponent({
 .page-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a237e;
+  color:rgb(0, 0, 0);
   margin: 0 0 8px 0;
   line-height: 1.2;
 }
